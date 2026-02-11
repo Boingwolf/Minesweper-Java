@@ -39,5 +39,8 @@ public class Celula {
     public void setEstaRevelada(Boolean estaRevelada) {
         this.estaRevelada = estaRevelada;
     }
-    
+
+    public void setFlagged(Boolean flagged) {
+        this.flagged = flagged;
+    }
 }

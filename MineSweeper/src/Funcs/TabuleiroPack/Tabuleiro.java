@@ -29,6 +29,7 @@ public class Tabuleiro {
                 this.tabuleiro[i][j] = new Celula();
             }
         }
+        imprimirTabuleiro();
 
     }
 
@@ -165,17 +166,12 @@ public class Tabuleiro {
         }
     }
 
-    public void imprimirTabuleiroFirst() {
-        if (this.linhas == null || this.colunas == null || this.tabuleiro == null) {
-            return;
-        }
-        LimparTela.limparTela();
-        for (int i = 0; i < this.linhas; i++) {
-            for (int j = 0; j < this.colunas; j++) {
-                Celula m = this.tabuleiro[i][j];
-                System.out.print("# ");
-            }
-            System.out.println();
-        }
+    public void toggleFlag(int linha, int coluna) {
+    Celula cell = tabuleiro[linha][coluna];
+
+    if (!cell.getEstaRevelada()) {
+        cell.setFlagged(!cell.getFlagged());
     }
+}
+
 }
