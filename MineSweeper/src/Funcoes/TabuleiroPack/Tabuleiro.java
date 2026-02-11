@@ -39,6 +39,10 @@ public class Tabuleiro {
     }
 
     public void gerarMinas() {
+        gerarMinasExceto(-1, -1);
+    }
+
+    public void gerarMinasExceto(int linhaExcluida, int colunaExcluida) {
         if (this.tabuleiro == null)
             iniciarTabuleiro();
         Random rnd = new Random();
@@ -46,6 +50,12 @@ public class Tabuleiro {
         while (placed < this.minas) {
             int r = rnd.nextInt(this.linhas);
             int c = rnd.nextInt(this.colunas);
+
+            // Não coloca mina na posição excluída
+            if (r == linhaExcluida && c == colunaExcluida) {
+                continue;
+            }
+
             Celula m = this.tabuleiro[r][c];
             if (!m.getTemMina()) {
                 // replace with a Mina that has a mine
@@ -181,6 +191,12 @@ public class Tabuleiro {
 
     public Celula[][] getTabuleiro() {
         return this.tabuleiro;
+    }
+
+    public void resetarTabuleiro(int linhaExcluida, int colunaExcluida) {
+        iniciarTabuleiro();
+        gerarMinasExceto(linhaExcluida, colunaExcluida);
+        calcularVizinhas();
     }
 
 }
