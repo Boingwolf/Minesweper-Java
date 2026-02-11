@@ -6,97 +6,158 @@ import Swing.components.StatusPanel;
 import Swing.icons.IconManager;
 import Swing.menu.MenuInicial;
 import Swing.utils.GameTimer;
+import Swing.utils.Tema;
+import Swing.utils.TemaManager;
 import java.awt.BorderLayout;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 
+/**
+ * Controla a janela principal e o fluxo de telas do jogo.
+ */
 public class GUI {
 
-    private JFrame frame;
-    private GamePanel gamePanel;
-    private StatusPanel statusPanel;
-    private GameTimer gameTimer;
-    private Tabuleiro tabuleiro;
+    private JFrame janela;
+    private GamePanel painelJogo;
+    private StatusPanel painelEstado;
+    private GameTimer cronometroJogo;
+    private final Tabuleiro tabuleiro;
 
+    /**
+     * Cria a GUI vinculada ao tabuleiro.
+     *
+     * @param tabuleiro tabuleiro do jogo
+     * @param linhas    numero de linhas (usado para configuracao inicial)
+     * @param colunas   numero de colunas (usado para configuracao inicial)
+     */
     public GUI(Tabuleiro tabuleiro, int linhas, int colunas) {
         this.tabuleiro = tabuleiro;
     }
 
+    /**
+     * Exibe a tela de menu inicial.
+     */
     public void mostrarMenuInicial() {
         MenuInicial menu = new MenuInicial(this::iniciarJogoComDificuldade);
         menu.mostrar();
     }
 
+    /**
+     * Inicia um novo jogo com a dificuldade escolhida.
+     *
+     * @param linhas  numero de linhas
+     * @param colunas numero de colunas
+     * @param minas   quantidade de minas
+     */
     private void iniciarJogoComDificuldade(int linhas, int colunas, int minas) {
         Tabuleiro novoTabuleiro = new Tabuleiro(linhas, colunas, minas);
         novoTabuleiro.iniciarTabuleiro();
         novoTabuleiro.gerarMinas();
         novoTabuleiro.calcularVizinhas();
 
-        GUI novaGUI = new GUI(novoTabuleiro, linhas, colunas);
-        novaGUI.iniciarJanela();
+        GUI novaGui = new GUI(novoTabuleiro, linhas, colunas);
+        novaGui.iniciarJanela();
     }
 
+    /**
+     * Monta e exibe a janela principal do jogo.
+     */
     public void iniciarJanela() {
-        frame = new JFrame("MineSweeper");
-        IconManager iconManager = new IconManager();
-        frame.setIconImage(iconManager.carregarIconeJanela("/images/favicon.png"));
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(700, 800);
-        frame.setLocationRelativeTo(null);
+        janela = new JFrame("MineSweeper");
+        IconManager gestorIcones = new IconManager();
+        janela.setIconImage(gestorIcones.carregarIconeJanela("/images/favicon.png"));
+        janela.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        janela.setSize(700, 800);
+        janela.setLocationRelativeTo(null);
 
-        statusPanel = new StatusPanel(tabuleiro);
+        painelEstado = new StatusPanel(tabuleiro);
 
-        GamePanel.GameCallback gameCallback = new GamePanel.GameCallback() {
+        GamePanel.GameCallback callbackJogo = new GamePanel.GameCallback() {
             @Override
             public void onGameLost() {
-                gameTimer.parar();
-                frame.dispose();
+                cronometroJogo.parar();
+                janela.dispose();
                 mostrarMenuInicial();
             }
 
             @Override
             public void onGameWon() {
-                gameTimer.parar();
-                frame.dispose();
+                cronometroJogo.parar();
+                janela.dispose();
                 mostrarMenuInicial();
             }
         };
 
-        gamePanel = new GamePanel(tabuleiro, 9, 9, statusPanel, gameCallback);
+        painelJogo = new GamePanel(tabuleiro, 9, 9, painelEstado, callbackJogo);
 
-        frame.setLayout(new BorderLayout());
-        frame.add(statusPanel, BorderLayout.NORTH);
-        frame.add(gamePanel, BorderLayout.CENTER);
+        janela.setLayout(new BorderLayout());
+        janela.add(painelEstado, BorderLayout.NORTH);
+        janela.add(painelJogo, BorderLayout.CENTER);
 
-        gameTimer = new GameTimer(statusPanel.getTempoLabel());
-        gameTimer.iniciar();
+        cronometroJogo = new GameTimer(painelEstado.getTempoLabel());
+        cronometroJogo.iniciar();
 
-        statusPanel.atualizarMinasRestantes(0);
+        painelEstado.atualizarMinasRestantes(0);
 
-        JMenuBar menuBar = new JMenuBar();
+        JMenuBar barraMenu = new JMenuBar();
         JMenu menu = new JMenu("Opções");
-        JMenuItem reiniciarItem = new JMenuItem("Reiniciar");
-        reiniciarItem.addActionListener(e -> reiniciarJogo());
-        JMenuItem menuInicialItem = new JMenuItem("Menu Inicial");
-        menuInicialItem.addActionListener(e -> {
-            gameTimer.parar();
-            frame.dispose();
+        JMenuItem itemReiniciar = new JMenuItem("Reiniciar");
+        itemReiniciar.addActionListener(e -> reiniciarJogo());
+        JMenuItem itemMenuInicial = new JMenuItem("Menu Inicial");
+        itemMenuInicial.addActionListener(e -> {
+            cronometroJogo.parar();
+            janela.dispose();
             mostrarMenuInicial();
         });
-        menu.add(reiniciarItem);
-        menu.add(menuInicialItem);
-        menuBar.add(menu);
-        frame.setJMenuBar(menuBar);
+        menu.add(itemReiniciar);
+        menu.add(itemMenuInicial);
+        barraMenu.add(menu);
+        janela.setJMenuBar(barraMenu);
 
-        frame.setVisible(true);
+        aplicarTema(barraMenu, menu, itemReiniciar, itemMenuInicial);
+
+        janela.setVisible(true);
     }
 
+    /**
+     * Aplica o tema atual aos componentes da janela.
+     *
+     * @param barraMenu       barra de menu
+     * @param menu            menu principal
+     * @param itemReiniciar   item de reinicio
+     * @param itemMenuInicial item para voltar ao menu inicial
+     */
+    private void aplicarTema(JMenuBar barraMenu, JMenu menu, JMenuItem itemReiniciar, JMenuItem itemMenuInicial) {
+        Tema tema = TemaManager.getTemaAtual();
+        janela.getContentPane().setBackground(tema.getPainelFundo());
+
+        painelEstado.aplicarTema(tema);
+        painelJogo.aplicarTema(tema);
+
+        barraMenu.setOpaque(true);
+        barraMenu.setBackground(tema.getMenuFundo());
+
+        menu.setOpaque(true);
+        menu.setBackground(tema.getMenuFundo());
+        menu.setForeground(tema.getMenuTexto());
+
+        itemReiniciar.setOpaque(true);
+        itemReiniciar.setBackground(tema.getMenuFundo());
+        itemReiniciar.setForeground(tema.getMenuTexto());
+
+        itemMenuInicial.setOpaque(true);
+        itemMenuInicial.setBackground(tema.getMenuFundo());
+        itemMenuInicial.setForeground(tema.getMenuTexto());
+    }
+
+    /**
+     * Reinicia o jogo com a dificuldade padrao.
+     */
     private void reiniciarJogo() {
-        gameTimer.parar();
-        frame.dispose();
+        cronometroJogo.parar();
+        janela.dispose();
         iniciarJogoComDificuldade(9, 9, 10);
     }
 }

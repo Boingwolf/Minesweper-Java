@@ -3,10 +3,8 @@ package Swing.components;
 import Funcoes.CelulaPack.Celula;
 import Funcoes.TabuleiroPack.Tabuleiro;
 import Swing.icons.IconManager;
-import javax.swing.JButton;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
+import Swing.utils.Tema;
+import Swing.utils.TemaManager;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -18,53 +16,84 @@ import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import javax.swing.JButton;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
+/**
+ * Painel principal do jogo, responsavel por renderizar e interagir com o
+ * tabuleiro.
+ */
 public class GamePanel extends JPanel {
 
-    private static final int CELL_ICON_SIZE = 24;
+    private static final int TAMANHO_ICONE_CELULA = 24;
 
-    private final JButton[][] buttons;
+    private final JButton[][] botoes;
     private final int linhas;
     private final int colunas;
     private final Tabuleiro tabuleiro;
-    private final IconManager iconManager;
-    private final StatusPanel statusPanel;
-    private final GameCallback gameCallback;
+    private final IconManager gestorIcones;
+    private final StatusPanel painelEstado;
+    private final GameCallback callbackJogo;
     private boolean primeiroClique;
     private static boolean primeiroCliqueSeguroAtivado = true;
 
+    /**
+     * Callback para eventos de vitoria e derrota do jogo.
+     */
     public interface GameCallback {
+        /**
+         * Disparado quando o jogador perde.
+         */
         void onGameLost();
 
+        /**
+         * Disparado quando o jogador vence.
+         */
         void onGameWon();
     }
 
-    public GamePanel(Tabuleiro tabuleiro, int linhas, int colunas, StatusPanel statusPanel, GameCallback gameCallback) {
+    /**
+     * Cria o painel do jogo com tabuleiro e status vinculados.
+     *
+     * @param tabuleiro    instancia do tabuleiro
+     * @param linhas       quantidade de linhas
+     * @param colunas      quantidade de colunas
+     * @param painelEstado painel de status
+     * @param callbackJogo callbacks de vitoria/derrota
+     */
+    public GamePanel(Tabuleiro tabuleiro, int linhas, int colunas, StatusPanel painelEstado,
+            GameCallback callbackJogo) {
         this.linhas = linhas;
         this.colunas = colunas;
         this.tabuleiro = tabuleiro;
-        this.statusPanel = statusPanel;
-        this.gameCallback = gameCallback;
-        this.buttons = new JButton[linhas][colunas];
+        this.painelEstado = painelEstado;
+        this.callbackJogo = callbackJogo;
+        this.botoes = new JButton[linhas][colunas];
         this.primeiroClique = true;
-        this.iconManager = new IconManager();
+        this.gestorIcones = new IconManager();
 
         criarGrid();
+        aplicarTema(TemaManager.getTemaAtual());
     }
 
+    /**
+     * Monta a grade de botoes e associa os listeners de clique.
+     */
     private void criarGrid() {
         setLayout(new BorderLayout());
 
-        PatternPanel gridPanel = new PatternPanel(new GridLayout(linhas, colunas));
+        PatternPanel painelGrelha = new PatternPanel(new GridLayout(linhas, colunas));
 
         for (int i = 0; i < linhas; i++) {
             for (int j = 0; j < colunas; j++) {
-                buttons[i][j] = new JButton();
+                botoes[i][j] = new JButton();
                 int linha = i;
                 int coluna = j;
 
-                buttons[i][j].addActionListener(e -> handleCellClick(linha, coluna));
-                buttons[i][j].addMouseListener(new MouseAdapter() {
+                botoes[i][j].addActionListener(e -> handleCellClick(linha, coluna));
+                botoes[i][j].addMouseListener(new MouseAdapter() {
                     @Override
                     public void mousePressed(MouseEvent e) {
                         if (SwingUtilities.isRightMouseButton(e)) {
@@ -73,24 +102,39 @@ public class GamePanel extends JPanel {
                     }
                 });
 
-                configurarBotao(buttons[i][j]);
-                gridPanel.add(buttons[i][j]);
+                configurarBotao(botoes[i][j]);
+                painelGrelha.add(botoes[i][j]);
             }
         }
 
-        add(gridPanel, java.awt.BorderLayout.CENTER);
+        add(painelGrelha, java.awt.BorderLayout.CENTER);
         atualizarTela();
     }
 
-    private void configurarBotao(JButton button) {
-        button.setBorderPainted(true);
-        button.setFocusPainted(false);
-        button.setContentAreaFilled(false);
-        button.setMargin(new Insets(0, 0, 0, 0));
-        button.setPreferredSize(new Dimension(CELL_ICON_SIZE, CELL_ICON_SIZE));
-        button.setIcon(iconManager.getCelulaFechadaIcon());
+    /**
+     * Configura o estilo e o icon padrao de um botao de celula.
+     *
+     * @param botao botao a configurar
+     */
+    private void configurarBotao(JButton botao) {
+        Tema tema = TemaManager.getTemaAtual();
+        botao.setBorderPainted(true);
+        botao.setFocusPainted(false);
+        botao.setContentAreaFilled(false);
+        botao.setOpaque(true);
+        botao.setBackground(tema.getPainelFundo());
+        botao.setForeground(tema.getTextoPadrao());
+        botao.setMargin(new Insets(0, 0, 0, 0));
+        botao.setPreferredSize(new Dimension(TAMANHO_ICONE_CELULA, TAMANHO_ICONE_CELULA));
+        botao.setIcon(gestorIcones.getCelulaFechadaIcon());
     }
 
+    /**
+     * Trata o clique esquerdo em uma celula.
+     *
+     * @param linha  linha clicada
+     * @param coluna coluna clicada
+     */
     private void handleCellClick(int linha, int coluna) {
         if (primeiroClique && primeiroCliqueSeguroAtivado) {
             tabuleiro.revelarCasa(linha, coluna);
@@ -106,108 +150,173 @@ public class GamePanel extends JPanel {
 
         if (tabuleiro.getTabuleiro()[linha][coluna].getTemMina()) {
             JOptionPane.showMessageDialog(this, "Você perdeu!");
-            gameCallback.onGameLost();
+            callbackJogo.onGameLost();
         } else if (tabuleiro.verificarVitoria()) {
             JOptionPane.showMessageDialog(this, "Parabéns, você venceu!");
-            gameCallback.onGameWon();
+            callbackJogo.onGameWon();
         }
     }
 
+    /**
+     * Trata o clique direito para alternar bandeiras.
+     *
+     * @param linha  linha clicada
+     * @param coluna coluna clicada
+     */
     private void handleRightClick(int linha, int coluna) {
         tabuleiro.toggleFlag(linha, coluna);
-        Celula cell = tabuleiro.getTabuleiro()[linha][coluna];
+        Celula celula = tabuleiro.getTabuleiro()[linha][coluna];
 
-        if (cell.getFlagged()) {
-            buttons[linha][coluna].setIcon(iconManager.getBandeiraIcon());
-        } else if (!cell.getEstaRevelada()) {
-            buttons[linha][coluna].setIcon(iconManager.getCelulaFechadaIcon());
+        if (celula.getFlagged()) {
+            botoes[linha][coluna].setIcon(gestorIcones.getBandeiraIcon());
+        } else if (!celula.getEstaRevelada()) {
+            botoes[linha][coluna].setIcon(gestorIcones.getCelulaFechadaIcon());
         }
 
         atualizarMinasRestantes();
     }
 
+    /**
+     * Atualiza os icones e estados visuais das celulas.
+     */
     private void atualizarTela() {
         for (int i = 0; i < linhas; i++) {
             for (int j = 0; j < colunas; j++) {
-                Celula cell = tabuleiro.getTabuleiro()[i][j];
+                Celula celula = tabuleiro.getTabuleiro()[i][j];
 
-                if (cell.getEstaRevelada()) {
-                    if (cell.getTemMina()) {
-                        buttons[i][j].setIcon(iconManager.getExplosaoIcon() != null ? iconManager.getExplosaoIcon()
-                                : iconManager.getBombaIcon());
-                    } else if (cell.getVizinhas() > 0) {
-                        buttons[i][j].setIcon(iconManager.getNumeroIcon(cell.getVizinhas()));
+                if (celula.getEstaRevelada()) {
+                    if (celula.getTemMina()) {
+                        botoes[i][j].setIcon(gestorIcones.getExplosaoIcon() != null ? gestorIcones.getExplosaoIcon()
+                                : gestorIcones.getBombaIcon());
+                    } else if (celula.getVizinhas() > 0) {
+                        botoes[i][j].setIcon(gestorIcones.getNumeroIcon(celula.getVizinhas()));
                     } else {
-                        buttons[i][j].setIcon(iconManager.getCelulaAbertaIcon());
+                        botoes[i][j].setIcon(gestorIcones.getCelulaAbertaIcon());
                     }
 
-                    buttons[i][j].setDisabledIcon(buttons[i][j].getIcon());
-                    buttons[i][j].setText("");
-                    buttons[i][j].setEnabled(false);
-                } else if (!cell.getFlagged()) {
-                    buttons[i][j].setIcon(iconManager.getCelulaFechadaIcon());
+                    botoes[i][j].setDisabledIcon(botoes[i][j].getIcon());
+                    botoes[i][j].setText("");
+                    botoes[i][j].setEnabled(false);
+                } else if (!celula.getFlagged()) {
+                    botoes[i][j].setIcon(gestorIcones.getCelulaFechadaIcon());
                 }
             }
         }
     }
 
+    /**
+     * Atualiza o indicador de minas restantes no painel de status.
+     */
     private void atualizarMinasRestantes() {
         int bandeiras = contarBandeiras();
-        statusPanel.atualizarMinasRestantes(bandeiras);
+        painelEstado.atualizarMinasRestantes(bandeiras);
     }
 
+    /**
+     * Conta quantas celulas estao marcadas com bandeira.
+     *
+     * @return quantidade de bandeiras
+     */
     private int contarBandeiras() {
-        int count = 0;
+        int contagem = 0;
         for (int i = 0; i < linhas; i++) {
             for (int j = 0; j < colunas; j++) {
                 if (tabuleiro.getTabuleiro()[i][j].getFlagged()) {
-                    count++;
+                    contagem++;
                 }
             }
         }
-        return count;
+        return contagem;
     }
 
+    /**
+     * Pinta o fundo com um gradiente suave.
+     *
+     * @param grafico contexto grafico
+     */
     @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2 = (Graphics2D) g.create();
-        g2.setPaint(
-                new GradientPaint(0, 0, new Color(245, 245, 245), 0, getHeight(), new Color(232, 232, 232)));
-        g2.fillRect(0, 0, getWidth(), getHeight());
-        g2.dispose();
+    protected void paintComponent(Graphics grafico) {
+        super.paintComponent(grafico);
+        Tema tema = TemaManager.getTemaAtual();
+        Graphics2D grafico2d = (Graphics2D) grafico.create();
+        grafico2d.setPaint(
+                new GradientPaint(0, 0, tema.getFundoGradienteTopo(), 0, getHeight(),
+                        tema.getFundoGradienteBase()));
+        grafico2d.fillRect(0, 0, getWidth(), getHeight());
+        grafico2d.dispose();
     }
 
+    /**
+     * Aplica o tema ao painel e aos botoes.
+     *
+     * @param tema tema escolhido
+     */
+    public void aplicarTema(Tema tema) {
+        setOpaque(true);
+        setBackground(tema.getPainelFundo());
+        for (int i = 0; i < linhas; i++) {
+            for (int j = 0; j < colunas; j++) {
+                botoes[i][j].setBackground(tema.getPainelFundo());
+                botoes[i][j].setForeground(tema.getTextoPadrao());
+            }
+        }
+        repaint();
+    }
+
+    /**
+     * Retorna se o modo de primeiro clique seguro esta ativado.
+     *
+     * @return true se ativado; caso contrario false
+     */
     public static boolean isPrimeiroCliqueSeguroAtivado() {
         return primeiroCliqueSeguroAtivado;
     }
 
+    /**
+     * Define o modo de primeiro clique seguro.
+     *
+     * @param ativado novo estado do modo seguro
+     */
     public static void setPrimeiroCliqueSeguroAtivado(boolean ativado) {
         primeiroCliqueSeguroAtivado = ativado;
     }
 
+    /**
+     * Painel interno que desenha o padrao de fundo do grid.
+     */
     private class PatternPanel extends JPanel {
+        /**
+         * Cria o painel com o layout fornecido.
+         *
+         * @param layout layout do painel
+         */
         PatternPanel(LayoutManager layout) {
             super(layout);
             setOpaque(true);
         }
 
+        /**
+         * Desenha o padrao quadriculado no fundo.
+         *
+         * @param grafico contexto grafico
+         */
         @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setColor(new Color(235, 235, 235));
-            g2.fillRect(0, 0, getWidth(), getHeight());
-            g2.setColor(new Color(228, 228, 228));
-            int step = CELL_ICON_SIZE;
-            for (int y = 0; y < getHeight(); y += step) {
-                for (int x = 0; x < getWidth(); x += step) {
-                    if (((x + y) / step) % 2 == 0) {
-                        g2.fillRect(x, y, step, step);
+        protected void paintComponent(Graphics grafico) {
+            super.paintComponent(grafico);
+            Graphics2D grafico2d = (Graphics2D) grafico.create();
+            Tema tema = TemaManager.getTemaAtual();
+            grafico2d.setColor(tema.getGridBase());
+            grafico2d.fillRect(0, 0, getWidth(), getHeight());
+            grafico2d.setColor(tema.getGridAlternado());
+            int passo = TAMANHO_ICONE_CELULA;
+            for (int y = 0; y < getHeight(); y += passo) {
+                for (int x = 0; x < getWidth(); x += passo) {
+                    if (((x + y) / passo) % 2 == 0) {
+                        grafico2d.fillRect(x, y, passo, passo);
                     }
                 }
             }
-            g2.dispose();
+            grafico2d.dispose();
         }
     }
 }

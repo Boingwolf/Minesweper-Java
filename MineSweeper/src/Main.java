@@ -1,6 +1,16 @@
 import Funcoes.TabuleiroPack.Tabuleiro;
 import java.util.Scanner;
+
+/**
+ * Ponto de entrada do modo console do Minesweeper.
+ */
 public class Main {
+    /**
+     * Inicia o jogo no console e processa jogadas do usuario.
+     *
+     * @param args argumentos de linha de comando
+     * @throws Exception se ocorrer erro nao tratado durante a execucao
+     */
     public static void main(String[] args) throws Exception {
         Tabuleiro tabuleiro = new Tabuleiro();
         tabuleiro.iniciarTabuleiro();
