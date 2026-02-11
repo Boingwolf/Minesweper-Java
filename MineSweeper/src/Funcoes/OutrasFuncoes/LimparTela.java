@@ -1,4 +1,4 @@
-package Funcs.OutrasFuncoes;
+package Funcoes.OutrasFuncoes;
 
 public class LimparTela {
     public static void limparTela() {

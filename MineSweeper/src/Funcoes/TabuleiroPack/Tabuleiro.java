@@ -1,7 +1,7 @@
-package Funcs.TabuleiroPack;
+package Funcoes.TabuleiroPack;
 
-import Funcs.CelulaPack.Celula;
-import Funcs.OutrasFuncoes.LimparTela;
+import Funcoes.CelulaPack.Celula;
+import Funcoes.OutrasFuncoes.LimparTela;
 import java.util.Random;
 
 public class Tabuleiro {
@@ -32,8 +32,6 @@ public class Tabuleiro {
                 this.tabuleiro[i][j] = new Celula();
             }
         }
-        imprimirTabuleiro();
-
     }
 
     private boolean isInside(int linha, int coluna) {
@@ -83,7 +81,7 @@ public class Tabuleiro {
 
     public void revelarCasa(Integer linha, Integer coluna) {
         if (linha == null || coluna == null)
-        return;
+            return;
 
         if (this.tabuleiro == null)
             return;
@@ -170,12 +168,16 @@ public class Tabuleiro {
     }
 
     public void toggleFlag(int linha, int coluna) {
-    Celula cell = tabuleiro[linha][coluna];
+        Celula cell = tabuleiro[linha][coluna];
 
-    if (!cell.getEstaRevelada()) {
-        cell.setFlagged(!cell.getFlagged());
+        if (!cell.getEstaRevelada()) {
+            cell.setFlagged(!cell.getFlagged());
+        }
     }
-}
+
+    public Integer getMinas() {
+        return this.minas;
+    }
 
     public Celula[][] getTabuleiro() {
         return this.tabuleiro;

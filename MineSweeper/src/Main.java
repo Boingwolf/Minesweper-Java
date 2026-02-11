@@ -1,4 +1,4 @@
-import Funcs.TabuleiroPack.Tabuleiro;
+import Funcoes.TabuleiroPack.Tabuleiro;
 import java.util.Scanner;
 public class Main {
     public static void main(String[] args) throws Exception {

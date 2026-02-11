@@ -1,4 +1,4 @@
-package Funcs.CelulaPack;
+package Funcoes.CelulaPack;
 
 public class Celula {
     private Boolean temMina;
