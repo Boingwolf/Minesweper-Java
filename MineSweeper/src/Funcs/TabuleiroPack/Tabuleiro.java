@@ -14,6 +14,9 @@ public class Tabuleiro {
         this.linhas = 9;
         this.colunas = 9;
         this.minas = 10;
+        iniciarTabuleiro();
+        gerarMinas();
+        calcularVizinhas();
     }
 
     public Tabuleiro(Integer linhas, Integer colunas, Integer minas) {
@@ -173,5 +176,9 @@ public class Tabuleiro {
         cell.setFlagged(!cell.getFlagged());
     }
 }
+
+    public Celula[][] getTabuleiro() {
+        return this.tabuleiro;
+    }
 
 }
