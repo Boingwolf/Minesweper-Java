@@ -17,13 +17,15 @@ import javax.swing.JMenuItem;
 /**
  * Controla a janela principal e o fluxo de telas do jogo.
  */
-public class GUI {
+public class GUIConfig {
 
     private JFrame janela;
     private GamePanel painelJogo;
     private StatusPanel painelEstado;
     private GameTimer cronometroJogo;
     private final Tabuleiro tabuleiro;
+    private int linhasGame;
+    private int colunasGame;
 
     /**
      * Cria a GUI vinculada ao tabuleiro.
@@ -32,8 +34,10 @@ public class GUI {
      * @param linhas    numero de linhas (usado para configuracao inicial)
      * @param colunas   numero de colunas (usado para configuracao inicial)
      */
-    public GUI(Tabuleiro tabuleiro, int linhas, int colunas) {
+    public GUIConfig(Tabuleiro tabuleiro, int linhas, int colunas) {
         this.tabuleiro = tabuleiro;
+        this.linhasGame = linhas;
+        this.colunasGame = colunas;
     }
 
     /**
@@ -57,7 +61,7 @@ public class GUI {
         novoTabuleiro.gerarMinas();
         novoTabuleiro.calcularVizinhas();
 
-        GUI novaGui = new GUI(novoTabuleiro, linhas, colunas);
+        GUIConfig novaGui = new GUIConfig(novoTabuleiro, linhas, colunas);
         novaGui.iniciarJanela();
     }
 
@@ -90,7 +94,7 @@ public class GUI {
             }
         };
 
-        painelJogo = new GamePanel(tabuleiro, 9, 9, painelEstado, callbackJogo);
+        painelJogo = new GamePanel(tabuleiro, linhasGame, colunasGame, painelEstado, callbackJogo);
 
         janela.setLayout(new BorderLayout());
         janela.add(painelEstado, BorderLayout.NORTH);
@@ -153,11 +157,11 @@ public class GUI {
     }
 
     /**
-     * Reinicia o jogo com a dificuldade padrao.
+     * Reinicia o jogo com a dificuldade atual.
      */
     private void reiniciarJogo() {
         cronometroJogo.parar();
         janela.dispose();
-        iniciarJogoComDificuldade(9, 9, 10);
+        iniciarJogoComDificuldade(linhasGame, colunasGame, tabuleiro.getMinas());
     }
 }
