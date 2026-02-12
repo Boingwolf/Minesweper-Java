@@ -105,7 +105,7 @@ public class GUIConfig {
 
         painelEstado.atualizarMinasRestantes(0);
 
-        JMenuBar barraMenu = new JMenuBar();
+        final JMenuBar barraMenu = new JMenuBar();
         JMenu menu = new JMenu("Opções");
         JMenuItem itemReiniciar = new JMenuItem("Reiniciar");
         itemReiniciar.addActionListener(e -> reiniciarJogo());
@@ -115,12 +115,29 @@ public class GUIConfig {
             janela.dispose();
             mostrarMenuInicial();
         });
+
+        JMenu menuTema = new JMenu("Tema");
+        JMenuItem itemTemaClaro = new JMenuItem("Claro");
+        itemTemaClaro.addActionListener(e -> {
+            TemaManager.setTemaAtual(Tema.CLARO);
+            aplicarTema(barraMenu, menu, itemReiniciar, itemMenuInicial, menuTema);
+        });
+        JMenuItem itemTemaEscuro = new JMenuItem("Escuro");
+        itemTemaEscuro.addActionListener(e -> {
+            TemaManager.setTemaAtual(Tema.ESCURO);
+            aplicarTema(barraMenu, menu, itemReiniciar, itemMenuInicial, menuTema);
+        });
+        menuTema.add(itemTemaClaro);
+        menuTema.add(itemTemaEscuro);
+
         menu.add(itemReiniciar);
         menu.add(itemMenuInicial);
+        menu.addSeparator();
+        menu.add(menuTema);
         barraMenu.add(menu);
         janela.setJMenuBar(barraMenu);
 
-        aplicarTema(barraMenu, menu, itemReiniciar, itemMenuInicial);
+        aplicarTema(barraMenu, menu, itemReiniciar, itemMenuInicial, menuTema);
 
         janela.setVisible(true);
     }
@@ -132,8 +149,10 @@ public class GUIConfig {
      * @param menu            menu principal
      * @param itemReiniciar   item de reinicio
      * @param itemMenuInicial item para voltar ao menu inicial
+     * @param menuTema        menu de seleção de tema
      */
-    private void aplicarTema(JMenuBar barraMenu, JMenu menu, JMenuItem itemReiniciar, JMenuItem itemMenuInicial) {
+    private void aplicarTema(JMenuBar barraMenu, JMenu menu, JMenuItem itemReiniciar, JMenuItem itemMenuInicial,
+            JMenu menuTema) {
         Tema tema = TemaManager.getTemaAtual();
         janela.getContentPane().setBackground(tema.getPainelFundo());
 
@@ -147,6 +166,10 @@ public class GUIConfig {
         menu.setBackground(tema.getMenuFundo());
         menu.setForeground(tema.getMenuTexto());
 
+        menuTema.setOpaque(true);
+        menuTema.setBackground(tema.getMenuFundo());
+        menuTema.setForeground(tema.getMenuTexto());
+
         itemReiniciar.setOpaque(true);
         itemReiniciar.setBackground(tema.getMenuFundo());
         itemReiniciar.setForeground(tema.getMenuTexto());
@@ -154,6 +177,15 @@ public class GUIConfig {
         itemMenuInicial.setOpaque(true);
         itemMenuInicial.setBackground(tema.getMenuFundo());
         itemMenuInicial.setForeground(tema.getMenuTexto());
+
+        for (int i = 0; i < menuTema.getItemCount(); i++) {
+            JMenuItem item = menuTema.getItem(i);
+            if (item != null) {
+                item.setOpaque(true);
+                item.setBackground(tema.getMenuFundo());
+                item.setForeground(tema.getMenuTexto());
+            }
+        }
     }
 
     /**

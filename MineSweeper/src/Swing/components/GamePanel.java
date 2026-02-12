@@ -252,6 +252,9 @@ public class GamePanel extends JPanel {
      * @param tema tema escolhido
      */
     public void aplicarTema(Tema tema) {
+        // Recarrega os ícones para o novo tema
+        gestorIcones.recarregarParaTema(tema);
+
         setOpaque(true);
         setBackground(tema.getPainelFundo());
         for (int i = 0; i < linhas; i++) {
@@ -260,6 +263,9 @@ public class GamePanel extends JPanel {
                 botoes[i][j].setForeground(tema.getTextoPadrao());
             }
         }
+
+        // Atualiza a tela para refletir os novos ícones
+        atualizarTela();
         repaint();
     }
 
