@@ -1,6 +1,8 @@
 package Swing.menu;
 
 import Swing.icons.IconManager;
+import Swing.stats.EstatisticasService;
+import Swing.utils.EstatisticasDialog;
 import Swing.utils.Tema;
 import Swing.utils.TemaManager;
 import java.awt.BorderLayout;
@@ -24,6 +26,7 @@ public class MenuInicial {
 
     private static boolean primeiroCliqueSeguroAtivado = true;
     private final MenuCallback callback;
+    private final EstatisticasService estatisticasService;
 
     /**
      * Callback para selecao de dificuldade.
@@ -46,6 +49,7 @@ public class MenuInicial {
      */
     public MenuInicial(MenuCallback callback) {
         this.callback = callback;
+        this.estatisticasService = new EstatisticasService();
     }
 
     /**
@@ -145,20 +149,25 @@ public class MenuInicial {
 
         JButton botaoSair = criarBotaoMenu("Sair");
         botaoSair.addActionListener(e -> System.exit(0));
+        JButton botaoEstatisticas = criarBotaoMenu("Estatísticas");
+        botaoEstatisticas.addActionListener(e -> EstatisticasDialog.mostrar(janela, "Estatísticas do Jogador",
+                estatisticasService.gerarResumo()));
+        painelPrincipal.add(botaoEstatisticas);
+        painelPrincipal.add(Box.createRigidArea(new Dimension(0, 15)));
         painelPrincipal.add(botaoSair);
 
-        JButton[] botoesMenu = new JButton[] { botaoFacil, botaoMedio, botaoDificil, botaoSair };
+        JButton[] botoesMenu = new JButton[] { botaoFacil, botaoMedio, botaoDificil, botaoEstatisticas, botaoSair };
         JRadioButton[] radiosMenu = new JRadioButton[] { botaoSim, botaoNao, botaoClaro, botaoEscuro };
 
         botaoClaro.addActionListener(e -> {
             TemaManager.setTemaAtual(Tema.CLARO);
             aplicarTema(TemaManager.getTemaAtual(), janela, painelPrincipal, painelOpcao, painelTema, titulo,
-                labelPrimeiroClique, labelTema, botoesMenu, radiosMenu);
+                    labelPrimeiroClique, labelTema, botoesMenu, radiosMenu);
         });
         botaoEscuro.addActionListener(e -> {
             TemaManager.setTemaAtual(Tema.ESCURO);
             aplicarTema(TemaManager.getTemaAtual(), janela, painelPrincipal, painelOpcao, painelTema, titulo,
-                labelPrimeiroClique, labelTema, botoesMenu, radiosMenu);
+                    labelPrimeiroClique, labelTema, botoesMenu, radiosMenu);
         });
 
         janela.add(painelPrincipal, BorderLayout.CENTER);
@@ -186,16 +195,16 @@ public class MenuInicial {
     /**
      * Aplica o tema atual aos componentes do menu.
      *
-     * @param tema             tema escolhido
-     * @param janela           janela do menu
-     * @param painelPrincipal  painel principal
-     * @param painelOpcao      painel de opcoes
-     * @param painelTema       painel de tema
-     * @param titulo           label do titulo
-     * @param labelPrimeiro    label do primeiro clique
-     * @param labelTema        label do tema
-     * @param botoes           botoes do menu
-     * @param radios           botoes de radio
+     * @param tema            tema escolhido
+     * @param janela          janela do menu
+     * @param painelPrincipal painel principal
+     * @param painelOpcao     painel de opcoes
+     * @param painelTema      painel de tema
+     * @param titulo          label do titulo
+     * @param labelPrimeiro   label do primeiro clique
+     * @param labelTema       label do tema
+     * @param botoes          botoes do menu
+     * @param radios          botoes de radio
      */
     private void aplicarTema(Tema tema, JFrame janela, JPanel painelPrincipal, JPanel painelOpcao, JPanel painelTema,
             JLabel titulo, JLabel labelPrimeiro, JLabel labelTema, JButton[] botoes, JRadioButton[] radios) {

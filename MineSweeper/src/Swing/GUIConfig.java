@@ -5,6 +5,9 @@ import Swing.components.GamePanel;
 import Swing.components.StatusPanel;
 import Swing.icons.IconManager;
 import Swing.menu.MenuInicial;
+import Swing.stats.DificuldadeJogo;
+import Swing.stats.EstatisticasService;
+import Swing.utils.EstatisticasDialog;
 import Swing.utils.GameTimer;
 import Swing.utils.Tema;
 import Swing.utils.TemaManager;
@@ -24,8 +27,11 @@ public class GUIConfig {
     private StatusPanel painelEstado;
     private GameTimer cronometroJogo;
     private final Tabuleiro tabuleiro;
+    private final EstatisticasService estatisticasService;
     private int linhasGame;
     private int colunasGame;
+    private int minasGame;
+    private DificuldadeJogo dificuldadeAtual;
 
     /**
      * Cria a GUI vinculada ao tabuleiro.
@@ -36,8 +42,11 @@ public class GUIConfig {
      */
     public GUIConfig(Tabuleiro tabuleiro, int linhas, int colunas) {
         this.tabuleiro = tabuleiro;
+        this.estatisticasService = new EstatisticasService();
         this.linhasGame = linhas;
         this.colunasGame = colunas;
+        this.minasGame = tabuleiro.getMinas();
+        this.dificuldadeAtual = DificuldadeJogo.fromConfig(linhas, colunas, minasGame);
     }
 
     /**
@@ -62,6 +71,7 @@ public class GUIConfig {
         novoTabuleiro.calcularVizinhas();
 
         GUIConfig novaGui = new GUIConfig(novoTabuleiro, linhas, colunas);
+        novaGui.dificuldadeAtual = DificuldadeJogo.fromConfig(linhas, colunas, minas);
         novaGui.iniciarJanela();
     }
 
@@ -82,6 +92,7 @@ public class GUIConfig {
             @Override
             public void onGameLost() {
                 cronometroJogo.parar();
+                registrarResultadoPartida(false);
                 janela.dispose();
                 mostrarMenuInicial();
             }
@@ -89,6 +100,7 @@ public class GUIConfig {
             @Override
             public void onGameWon() {
                 cronometroJogo.parar();
+                registrarResultadoPartida(true);
                 janela.dispose();
                 mostrarMenuInicial();
             }
@@ -109,6 +121,8 @@ public class GUIConfig {
         JMenu menu = new JMenu("Opções");
         JMenuItem itemReiniciar = new JMenuItem("Reiniciar");
         itemReiniciar.addActionListener(e -> reiniciarJogo());
+        JMenuItem itemEstatisticas = new JMenuItem("Estatísticas");
+        itemEstatisticas.addActionListener(e -> mostrarEstatisticas());
         JMenuItem itemMenuInicial = new JMenuItem("Menu Inicial");
         itemMenuInicial.addActionListener(e -> {
             cronometroJogo.parar();
@@ -120,24 +134,25 @@ public class GUIConfig {
         JMenuItem itemTemaClaro = new JMenuItem("Claro");
         itemTemaClaro.addActionListener(e -> {
             TemaManager.setTemaAtual(Tema.CLARO);
-            aplicarTema(barraMenu, menu, itemReiniciar, itemMenuInicial, menuTema);
+            aplicarTema(barraMenu, menu, itemReiniciar, itemEstatisticas, itemMenuInicial, menuTema);
         });
         JMenuItem itemTemaEscuro = new JMenuItem("Escuro");
         itemTemaEscuro.addActionListener(e -> {
             TemaManager.setTemaAtual(Tema.ESCURO);
-            aplicarTema(barraMenu, menu, itemReiniciar, itemMenuInicial, menuTema);
+            aplicarTema(barraMenu, menu, itemReiniciar, itemEstatisticas, itemMenuInicial, menuTema);
         });
         menuTema.add(itemTemaClaro);
         menuTema.add(itemTemaEscuro);
 
         menu.add(itemReiniciar);
+        menu.add(itemEstatisticas);
         menu.add(itemMenuInicial);
         menu.addSeparator();
         menu.add(menuTema);
         barraMenu.add(menu);
         janela.setJMenuBar(barraMenu);
 
-        aplicarTema(barraMenu, menu, itemReiniciar, itemMenuInicial, menuTema);
+        aplicarTema(barraMenu, menu, itemReiniciar, itemEstatisticas, itemMenuInicial, menuTema);
 
         janela.setVisible(true);
     }
@@ -151,8 +166,8 @@ public class GUIConfig {
      * @param itemMenuInicial item para voltar ao menu inicial
      * @param menuTema        menu de seleção de tema
      */
-    private void aplicarTema(JMenuBar barraMenu, JMenu menu, JMenuItem itemReiniciar, JMenuItem itemMenuInicial,
-            JMenu menuTema) {
+    private void aplicarTema(JMenuBar barraMenu, JMenu menu, JMenuItem itemReiniciar, JMenuItem itemEstatisticas,
+            JMenuItem itemMenuInicial, JMenu menuTema) {
         Tema tema = TemaManager.getTemaAtual();
         janela.getContentPane().setBackground(tema.getPainelFundo());
 
@@ -174,6 +189,10 @@ public class GUIConfig {
         itemReiniciar.setBackground(tema.getMenuFundo());
         itemReiniciar.setForeground(tema.getMenuTexto());
 
+        itemEstatisticas.setOpaque(true);
+        itemEstatisticas.setBackground(tema.getMenuFundo());
+        itemEstatisticas.setForeground(tema.getMenuTexto());
+
         itemMenuInicial.setOpaque(true);
         itemMenuInicial.setBackground(tema.getMenuFundo());
         itemMenuInicial.setForeground(tema.getMenuTexto());
@@ -194,6 +213,23 @@ public class GUIConfig {
     private void reiniciarJogo() {
         cronometroJogo.parar();
         janela.dispose();
-        iniciarJogoComDificuldade(linhasGame, colunasGame, tabuleiro.getMinas());
+        iniciarJogoComDificuldade(linhasGame, colunasGame, minasGame);
+    }
+
+    /**
+     * Registra o resultado da partida atual para estatísticas.
+     *
+     * @param venceu true quando vitória
+     */
+    private void registrarResultadoPartida(boolean venceu) {
+        int segundos = cronometroJogo != null ? cronometroJogo.getElapsedSeconds() : 0;
+        estatisticasService.registrarResultado(dificuldadeAtual, venceu, segundos);
+    }
+
+    /**
+     * Exibe o resumo de estatísticas ao jogador.
+     */
+    private void mostrarEstatisticas() {
+        EstatisticasDialog.mostrar(janela, "Estatísticas do Jogador", estatisticasService.gerarResumo());
     }
 }
