@@ -28,9 +28,9 @@ public class GUIConfig {
     private GameTimer cronometroJogo;
     private final Tabuleiro tabuleiro;
     private final EstatisticasService estatisticasService;
-    private int linhasGame;
-    private int colunasGame;
-    private int minasGame;
+    private final int linhasGame;
+    private final int colunasGame;
+    private final int minasGame;
     private DificuldadeJogo dificuldadeAtual;
 
     /**

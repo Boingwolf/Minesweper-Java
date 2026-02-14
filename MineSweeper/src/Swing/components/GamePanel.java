@@ -6,7 +6,6 @@ import Swing.icons.IconManager;
 import Swing.utils.Tema;
 import Swing.utils.TemaManager;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
@@ -25,7 +24,7 @@ import javax.swing.SwingUtilities;
  * Painel principal do jogo, responsavel por renderizar e interagir com o
  * tabuleiro.
  */
-public class GamePanel extends JPanel {
+public final class GamePanel extends JPanel {
 
     private static final int TAMANHO_ICONE_CELULA = 24;
 

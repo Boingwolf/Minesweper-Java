@@ -23,6 +23,7 @@ public class IconManager {
     private ImageIcon iconeCelulaAberta;
     private ImageIcon iconeExplosao;
     private Map<Integer, ImageIcon> iconesNumero;
+    @SuppressWarnings("unused")
     private Tema temaNaCarregar;
 
     /**
@@ -258,32 +259,16 @@ public class IconManager {
         }
 
         Color corNumero;
-        switch (numero) {
-            case 1:
-                corNumero = new Color(25, 118, 210);
-                break;
-            case 2:
-                corNumero = new Color(56, 142, 60);
-                break;
-            case 3:
-                corNumero = new Color(211, 47, 47);
-                break;
-            case 4:
-                corNumero = new Color(74, 20, 140);
-                break;
-            case 5:
-                corNumero = new Color(109, 76, 65);
-                break;
-            case 6:
-                corNumero = new Color(0, 121, 107);
-                break;
-            case 7:
-                corNumero = new Color(97, 97, 97);
-                break;
-            default:
-                corNumero = new Color(33, 33, 33);
-                break;
-        }
+        corNumero = switch (numero) {
+            case 1 -> new Color(25, 118, 210);
+            case 2 -> new Color(56, 142, 60);
+            case 3 -> new Color(211, 47, 47);
+            case 4 -> new Color(74, 20, 140);
+            case 5 -> new Color(109, 76, 65);
+            case 6 -> new Color(0, 121, 107);
+            case 7 -> new Color(97, 97, 97);
+            default -> new Color(33, 33, 33);
+        };
         grafico.setColor(corNumero);
         grafico.setFont(new Font("Arial", Font.BOLD, Math.max(16, tamanho - 4)));
         String texto = String.valueOf(numero);

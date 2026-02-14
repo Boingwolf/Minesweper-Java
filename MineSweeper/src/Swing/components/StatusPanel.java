@@ -10,7 +10,7 @@ import javax.swing.JPanel;
 /**
  * Painel de status que exibe tempo e minas restantes.
  */
-public class StatusPanel extends JPanel {
+public final class StatusPanel extends JPanel {
 
     private final JLabel labelTempo;
     private final JLabel labelMinas;

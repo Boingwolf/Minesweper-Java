@@ -163,7 +163,7 @@ public class EstatisticasService {
     private int parseInt(String valor, int padrao) {
         try {
             return Integer.parseInt(valor);
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
             return padrao;
         }
     }
@@ -171,7 +171,7 @@ public class EstatisticasService {
     private long parseLong(String valor, long padrao) {
         try {
             return Long.parseLong(valor);
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
             return padrao;
         }
     }
