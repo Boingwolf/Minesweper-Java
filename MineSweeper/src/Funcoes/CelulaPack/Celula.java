@@ -7,7 +7,7 @@ package Funcoes.CelulaPack;
 public class Celula {
     private Boolean temMina;
     private Boolean estaRevelada;
-    private Boolean flagged;
+    private Boolean temBandeira;
     private Integer vizinhas;
 
     /**
@@ -16,22 +16,22 @@ public class Celula {
     public Celula() {
         this.temMina = false;
         this.estaRevelada = false;
-        this.flagged = false;
+        this.temBandeira = false;
         this.vizinhas = 0;
     }
 
     /**
      * Cria uma celula com estado inicial definido.
      *
-     * @param temMina indica se a celula possui mina
+     * @param temMina      indica se a celula possui mina
      * @param estaRevelada indica se a celula esta revelada
-     * @param flagged indica se a celula possui bandeira
-     * @param vizinhas numero de minas vizinhas
+     * @param temBandeira  indica se a celula possui bandeira
+     * @param vizinhas     numero de minas vizinhas
      */
-    public Celula(Boolean temMina, Boolean estaRevelada, Boolean flagged, Integer vizinhas) {
+    public Celula(Boolean temMina, Boolean estaRevelada, Boolean temBandeira, Integer vizinhas) {
         this.temMina = temMina;
         this.estaRevelada = estaRevelada;
-        this.flagged = flagged;
+        this.temBandeira = temBandeira;
         this.vizinhas = vizinhas;
     }
 
@@ -58,8 +58,8 @@ public class Celula {
      *
      * @return true se estiver marcada; caso contrario false
      */
-    public Boolean getFlagged() {
-        return flagged;
+    public Boolean isTemBandeira() {
+        return temBandeira;
     }
 
     /**
@@ -83,9 +83,9 @@ public class Celula {
     /**
      * Define se a celula possui bandeira.
      *
-     * @param flagged novo estado de bandeira
+     * @param temBandeira novo estado de bandeira
      */
-    public void setFlagged(Boolean flagged) {
-        this.flagged = flagged;
+    public void setTemBandeira(Boolean temBandeira) {
+        this.temBandeira = temBandeira;
     }
 }

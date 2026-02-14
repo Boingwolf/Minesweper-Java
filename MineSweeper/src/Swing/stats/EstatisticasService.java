@@ -15,16 +15,24 @@ import java.util.Properties;
 public class EstatisticasService {
 
     private static final String ARQUIVO_NOME = "minesweeper-estatisticas.properties";
+    private static final String PASTA_DADOS = "MineSweeper";
+    private static final String SUBPASTA_DADOS = "data";
 
     private final Path caminhoArquivo;
     private final EstatisticasJogador estatisticas;
 
     /**
-     * Cria o serviço apontando para o diretório padrão do usuário.
+     * Cria o serviço apontando para a pasta de dados dentro do projeto.
      */
     public EstatisticasService() {
-        String home = System.getProperty("user.home");
-        this.caminhoArquivo = Paths.get(home, ARQUIVO_NOME);
+        String diretorioExecucao = System.getProperty("user.dir");
+        Path caminhoBaseProjeto = Paths.get(diretorioExecucao);
+
+        if (Files.exists(caminhoBaseProjeto.resolve(PASTA_DADOS))) {
+            caminhoBaseProjeto = caminhoBaseProjeto.resolve(PASTA_DADOS);
+        }
+
+        this.caminhoArquivo = caminhoBaseProjeto.resolve(SUBPASTA_DADOS).resolve(ARQUIVO_NOME);
         this.estatisticas = carregarDoDisco();
     }
 

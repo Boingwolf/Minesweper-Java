@@ -2,9 +2,9 @@ package Swing.menu;
 
 import Swing.icons.IconManager;
 import Swing.stats.EstatisticasService;
-import Swing.utils.EstatisticasDialog;
 import Swing.utils.Tema;
 import Swing.utils.TemaManager;
+import Swing.utils.ThemedDialog;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -25,6 +25,7 @@ import javax.swing.JRadioButton;
 public class MenuInicial {
 
     private static boolean primeiroCliqueSeguroAtivado = true;
+    private final boolean possuiJogoSalvo;
     private final MenuCallback callback;
     private final EstatisticasService estatisticasService;
 
@@ -40,14 +41,26 @@ public class MenuInicial {
          * @param minas   quantidade de minas
          */
         void onDificuldadeSelecionada(int linhas, int colunas, int minas);
+
+        /**
+         * Disparado quando o usuário escolhe iniciar o tutorial interativo.
+         */
+        void onTutorialSelecionado();
+
+        /**
+         * Disparado quando o usuário escolhe continuar um jogo salvo.
+         */
+        void onContinuarJogoSalvo();
     }
 
     /**
      * Cria o menu inicial com um callback de selecao.
      *
-     * @param callback callback para iniciar o jogo
+     * @param possuiJogoSalvo indica se há um jogo pausado disponível
+     * @param callback        callback para iniciar o jogo
      */
-    public MenuInicial(MenuCallback callback) {
+    public MenuInicial(boolean possuiJogoSalvo, MenuCallback callback) {
+        this.possuiJogoSalvo = possuiJogoSalvo;
         this.callback = callback;
         this.estatisticasService = new EstatisticasService();
     }
@@ -60,7 +73,7 @@ public class MenuInicial {
         IconManager gestorIcones = new IconManager();
         janela.setIconImage(gestorIcones.carregarIconeJanela("/images/favicon.png"));
         janela.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        janela.setSize(550, 650);
+        janela.setSize(550, 750);
         janela.setLocationRelativeTo(null);
         janela.setLayout(new BorderLayout());
 
@@ -123,6 +136,15 @@ public class MenuInicial {
         painelPrincipal.add(painelTema);
         painelPrincipal.add(Box.createRigidArea(new Dimension(0, 30)));
 
+        JButton botaoContinuar = criarBotaoMenu("Continuar Jogo Salvo");
+        botaoContinuar.setEnabled(possuiJogoSalvo);
+        botaoContinuar.addActionListener(e -> {
+            janela.dispose();
+            callback.onContinuarJogoSalvo();
+        });
+        painelPrincipal.add(botaoContinuar);
+        painelPrincipal.add(Box.createRigidArea(new Dimension(0, 15)));
+
         JButton botaoFacil = criarBotaoMenu("Fácil (9x9)");
         botaoFacil.addActionListener(e -> {
             janela.dispose();
@@ -147,16 +169,25 @@ public class MenuInicial {
         painelPrincipal.add(botaoDificil);
         painelPrincipal.add(Box.createRigidArea(new Dimension(0, 15)));
 
+        JButton botaoTutorial = criarBotaoMenu("Tutorial Interativo");
+        botaoTutorial.addActionListener(e -> {
+            janela.dispose();
+            callback.onTutorialSelecionado();
+        });
+        painelPrincipal.add(botaoTutorial);
+        painelPrincipal.add(Box.createRigidArea(new Dimension(0, 15)));
+
         JButton botaoSair = criarBotaoMenu("Sair");
         botaoSair.addActionListener(e -> System.exit(0));
         JButton botaoEstatisticas = criarBotaoMenu("Estatísticas");
-        botaoEstatisticas.addActionListener(e -> EstatisticasDialog.mostrar(janela, "Estatísticas do Jogador",
-                estatisticasService.gerarResumo()));
+        botaoEstatisticas.addActionListener(e -> ThemedDialog.mostrar(janela, "Estatísticas do Jogador",
+                estatisticasService.gerarResumo(), "Fechar", 400));
         painelPrincipal.add(botaoEstatisticas);
         painelPrincipal.add(Box.createRigidArea(new Dimension(0, 15)));
         painelPrincipal.add(botaoSair);
 
-        JButton[] botoesMenu = new JButton[] { botaoFacil, botaoMedio, botaoDificil, botaoEstatisticas, botaoSair };
+        JButton[] botoesMenu = new JButton[] { botaoContinuar, botaoFacil, botaoMedio, botaoDificil, botaoTutorial,
+                botaoEstatisticas, botaoSair };
         JRadioButton[] radiosMenu = new JRadioButton[] { botaoSim, botaoNao, botaoClaro, botaoEscuro };
 
         botaoClaro.addActionListener(e -> {

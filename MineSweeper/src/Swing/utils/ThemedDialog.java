@@ -15,21 +15,34 @@ import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
 /**
- * Exibe a janela de estatísticas respeitando o tema atual.
+ * Exibe diálogos respeitando o tema atual da aplicação.
  */
-public final class EstatisticasDialog {
+public final class ThemedDialog {
 
-    private EstatisticasDialog() {
+    private ThemedDialog() {
     }
 
     /**
-     * Mostra um diálogo de estatísticas com cores do tema ativo.
+     * Mostra um diálogo temático com botão padrão.
      *
      * @param parent   componente pai
      * @param titulo   título da janela
-     * @param conteudo conteúdo textual das estatísticas
+     * @param conteudo conteúdo textual
      */
     public static void mostrar(Component parent, String titulo, String conteudo) {
+        mostrar(parent, titulo, conteudo, "Fechar", 360);
+    }
+
+    /**
+     * Mostra um diálogo temático customizável.
+     *
+     * @param parent     componente pai
+     * @param titulo     título da janela
+     * @param conteudo   conteúdo textual
+     * @param textoBotao texto do botão de ação
+     * @param altura     altura da janela
+     */
+    public static void mostrar(Component parent, String titulo, String conteudo, String textoBotao, int altura) {
         Tema tema = TemaManager.getTemaAtual();
 
         JDialog dialog = criarDialog(parent, titulo);
@@ -53,7 +66,7 @@ public final class EstatisticasDialog {
         scroll.setBackground(tema.getPainelFundo());
         scroll.setOpaque(true);
 
-        JButton botaoFechar = new JButton("Fechar");
+        JButton botaoFechar = new JButton(textoBotao);
         botaoFechar.setFocusPainted(false);
         botaoFechar.setOpaque(true);
         botaoFechar.setBackground(tema.getBotaoFundo());
@@ -68,7 +81,7 @@ public final class EstatisticasDialog {
         painelRaiz.add(painelAcoes, BorderLayout.SOUTH);
 
         dialog.setContentPane(painelRaiz);
-        dialog.setSize(460, 400);
+        dialog.setSize(460, altura);
         dialog.setMinimumSize(dialog.getSize());
         dialog.setLocationRelativeTo(parent);
         dialog.setVisible(true);

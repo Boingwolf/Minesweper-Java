@@ -32,7 +32,7 @@ public enum DificuldadeJogo {
      * @param minas   minas do tabuleiro
      * @return dificuldade correspondente
      */
-    public static DificuldadeJogo fromConfig(int linhas, int colunas, int minas) {
+    public static DificuldadeJogo deConfiguracao(int linhas, int colunas, int minas) {
         if (linhas == 9 && colunas == 9 && minas == 10) {
             return FACIL;
         }

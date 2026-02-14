@@ -5,6 +5,8 @@ import Funcoes.TabuleiroPack.Tabuleiro;
 import Swing.icons.IconManager;
 import Swing.utils.Tema;
 import Swing.utils.TemaManager;
+import Swing.utils.ThemedDialog;
+import Swing.utils.TutorialInterativo;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GradientPaint;
@@ -16,7 +18,6 @@ import java.awt.LayoutManager;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JButton;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
@@ -35,7 +36,9 @@ public final class GamePanel extends JPanel {
     private final IconManager gestorIcones;
     private final StatusPanel painelEstado;
     private final GameCallback callbackJogo;
+    private final TutorialInterativo tutorialInterativo;
     private boolean primeiroClique;
+    private boolean pausado;
     private static boolean primeiroCliqueSeguroAtivado = true;
 
     /**
@@ -64,13 +67,46 @@ public final class GamePanel extends JPanel {
      */
     public GamePanel(Tabuleiro tabuleiro, int linhas, int colunas, StatusPanel painelEstado,
             GameCallback callbackJogo) {
+        this(tabuleiro, linhas, colunas, painelEstado, callbackJogo, null, true);
+    }
+
+    /**
+     * Cria o painel do jogo com suporte opcional a tutorial guiado.
+     *
+     * @param tabuleiro          instancia do tabuleiro
+     * @param linhas             quantidade de linhas
+     * @param colunas            quantidade de colunas
+     * @param painelEstado       painel de status
+     * @param callbackJogo       callbacks de vitoria/derrota
+     * @param tutorialInterativo tutorial ativo, quando existir
+     */
+    public GamePanel(Tabuleiro tabuleiro, int linhas, int colunas, StatusPanel painelEstado,
+            GameCallback callbackJogo, TutorialInterativo tutorialInterativo) {
+        this(tabuleiro, linhas, colunas, painelEstado, callbackJogo, tutorialInterativo, true);
+    }
+
+    /**
+     * Cria o painel com controle explícito do estado de primeiro clique.
+     *
+     * @param tabuleiro              instancia do tabuleiro
+     * @param linhas                 quantidade de linhas
+     * @param colunas                quantidade de colunas
+     * @param painelEstado           painel de status
+     * @param callbackJogo           callbacks de vitoria/derrota
+     * @param tutorialInterativo     tutorial ativo, quando existir
+     * @param primeiroCliquePendente true quando o primeiro clique ainda não ocorreu
+     */
+    public GamePanel(Tabuleiro tabuleiro, int linhas, int colunas, StatusPanel painelEstado,
+            GameCallback callbackJogo, TutorialInterativo tutorialInterativo, boolean primeiroCliquePendente) {
         this.linhas = linhas;
         this.colunas = colunas;
         this.tabuleiro = tabuleiro;
         this.painelEstado = painelEstado;
         this.callbackJogo = callbackJogo;
+        this.tutorialInterativo = tutorialInterativo;
         this.botoes = new JButton[linhas][colunas];
-        this.primeiroClique = true;
+        this.primeiroClique = tutorialInterativo == null && primeiroCliquePendente;
+        this.pausado = false;
         this.gestorIcones = new IconManager();
 
         criarGrid();
@@ -91,12 +127,12 @@ public final class GamePanel extends JPanel {
                 int linha = i;
                 int coluna = j;
 
-                botoes[i][j].addActionListener(e -> handleCellClick(linha, coluna));
+                botoes[i][j].addActionListener(e -> processarCliqueCelula(linha, coluna));
                 botoes[i][j].addMouseListener(new MouseAdapter() {
                     @Override
                     public void mousePressed(MouseEvent e) {
                         if (SwingUtilities.isRightMouseButton(e)) {
-                            handleRightClick(linha, coluna);
+                            processarCliqueDireito(linha, coluna);
                         }
                     }
                 });
@@ -134,7 +170,16 @@ public final class GamePanel extends JPanel {
      * @param linha  linha clicada
      * @param coluna coluna clicada
      */
-    private void handleCellClick(int linha, int coluna) {
+    private void processarCliqueCelula(int linha, int coluna) {
+        if (pausado) {
+            return;
+        }
+
+        if (tutorialInterativo != null
+                && !tutorialInterativo.validarAcaoEsperada(linha, coluna, false, painelEstado)) {
+            return;
+        }
+
         if (primeiroClique && primeiroCliqueSeguroAtivado) {
             tabuleiro.revelarCasa(linha, coluna);
             if (tabuleiro.getTabuleiro()[linha][coluna].getTemMina()) {
@@ -147,11 +192,21 @@ public final class GamePanel extends JPanel {
         tabuleiro.revelarCasa(linha, coluna);
         atualizarTela();
 
+        if (tutorialInterativo != null) {
+            tutorialInterativo.concluirPasso(painelEstado);
+            if (!tutorialInterativo.isAtivo()) {
+                ThemedDialog.mostrar(this, "Tutorial Interativo",
+                        "Tutorial concluído! Agora você já pode jogar normalmente.", "Continuar", 260);
+                callbackJogo.onGameWon();
+            }
+            return;
+        }
+
         if (tabuleiro.getTabuleiro()[linha][coluna].getTemMina()) {
-            JOptionPane.showMessageDialog(this, "Você perdeu!");
+            ThemedDialog.mostrar(this, "Fim de Jogo", "Você perdeu!", "Continuar", 240);
             callbackJogo.onGameLost();
         } else if (tabuleiro.verificarVitoria()) {
-            JOptionPane.showMessageDialog(this, "Parabéns, você venceu!");
+            ThemedDialog.mostrar(this, "Fim de Jogo", "Parabéns, você venceu!", "Continuar", 240);
             callbackJogo.onGameWon();
         }
     }
@@ -162,23 +217,53 @@ public final class GamePanel extends JPanel {
      * @param linha  linha clicada
      * @param coluna coluna clicada
      */
-    private void handleRightClick(int linha, int coluna) {
-        tabuleiro.toggleFlag(linha, coluna);
+    private void processarCliqueDireito(int linha, int coluna) {
+        if (pausado) {
+            return;
+        }
+
+        if (tutorialInterativo != null
+                && !tutorialInterativo.validarAcaoEsperada(linha, coluna, true, painelEstado)) {
+            return;
+        }
+
+        tabuleiro.alternarBandeira(linha, coluna);
         Celula celula = tabuleiro.getTabuleiro()[linha][coluna];
 
-        if (celula.getFlagged()) {
+        if (celula.isTemBandeira()) {
             botoes[linha][coluna].setIcon(gestorIcones.getBandeiraIcon());
         } else if (!celula.getEstaRevelada()) {
             botoes[linha][coluna].setIcon(gestorIcones.getCelulaFechadaIcon());
         }
 
         atualizarMinasRestantes();
+
+        if (tutorialInterativo != null) {
+            tutorialInterativo.concluirPasso(painelEstado);
+            if (!tutorialInterativo.isAtivo()) {
+                ThemedDialog.mostrar(this, "Tutorial Interativo",
+                        "Tutorial concluído! Agora você já pode jogar normalmente.", "Continuar", 260);
+                callbackJogo.onGameWon();
+            }
+        }
     }
 
     /**
      * Atualiza os icones e estados visuais das celulas.
      */
     private void atualizarTela() {
+        if (pausado) {
+            for (int i = 0; i < linhas; i++) {
+                for (int j = 0; j < colunas; j++) {
+                    botoes[i][j].setIcon(gestorIcones.getCelulaFechadaIcon());
+                    botoes[i][j].setDisabledIcon(gestorIcones.getCelulaFechadaIcon());
+                    botoes[i][j].setText("");
+                    botoes[i][j].setEnabled(false);
+                }
+            }
+            return;
+        }
+
         for (int i = 0; i < linhas; i++) {
             for (int j = 0; j < colunas; j++) {
                 Celula celula = tabuleiro.getTabuleiro()[i][j];
@@ -196,7 +281,7 @@ public final class GamePanel extends JPanel {
                     botoes[i][j].setDisabledIcon(botoes[i][j].getIcon());
                     botoes[i][j].setText("");
                     botoes[i][j].setEnabled(false);
-                } else if (!celula.getFlagged()) {
+                } else if (!celula.isTemBandeira()) {
                     botoes[i][j].setIcon(gestorIcones.getCelulaFechadaIcon());
                 }
             }
@@ -220,7 +305,7 @@ public final class GamePanel extends JPanel {
         int contagem = 0;
         for (int i = 0; i < linhas; i++) {
             for (int j = 0; j < colunas; j++) {
-                if (tabuleiro.getTabuleiro()[i][j].getFlagged()) {
+                if (tabuleiro.getTabuleiro()[i][j].isTemBandeira()) {
                     contagem++;
                 }
             }
@@ -266,6 +351,44 @@ public final class GamePanel extends JPanel {
         // Atualiza a tela para refletir os novos ícones
         atualizarTela();
         repaint();
+    }
+
+    /**
+     * Pausa ou retoma a interação e renderização do tabuleiro.
+     *
+     * @param pausado true para pausar; false para retomar
+     */
+    public void setPausado(boolean pausado) {
+        this.pausado = pausado;
+        atualizarTela();
+        repaint();
+    }
+
+    /**
+     * Retorna se o painel está pausado.
+     *
+     * @return true quando pausado
+     */
+    public boolean isPausado() {
+        return pausado;
+    }
+
+    /**
+     * Retorna se o primeiro clique ainda está pendente.
+     *
+     * @return true quando ainda não houve clique inicial
+     */
+    public boolean isPrimeiroCliquePendente() {
+        return primeiroClique;
+    }
+
+    /**
+     * Retorna a quantidade atual de bandeiras marcadas no tabuleiro.
+     *
+     * @return total de bandeiras
+     */
+    public int getQuantidadeBandeiras() {
+        return contarBandeiras();
     }
 
     /**

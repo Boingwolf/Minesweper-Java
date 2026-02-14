@@ -138,3 +138,10 @@ $RECYCLE.BIN/
 .env
 .env.local
 .env.*.local
+
+
+################################
+# Minesweeper Local Data
+################################
+MineSweeper/data/minesweeper-save.dat
+MineSweeper/data/minesweeper-estatisticas.properties

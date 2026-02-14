@@ -28,9 +28,9 @@ public class Tabuleiro {
     /**
      * Cria um tabuleiro com dimensoes e quantidade de minas informadas.
      *
-     * @param linhas numero de linhas
+     * @param linhas  numero de linhas
      * @param colunas numero de colunas
-     * @param minas quantidade de minas
+     * @param minas   quantidade de minas
      */
     public Tabuleiro(Integer linhas, Integer colunas, Integer minas) {
         this.linhas = linhas;
@@ -53,11 +53,11 @@ public class Tabuleiro {
     /**
      * Verifica se as coordenadas estao dentro dos limites do tabuleiro.
      *
-     * @param linha indice da linha
+     * @param linha  indice da linha
      * @param coluna indice da coluna
      * @return true se estiver dentro; caso contrario false
      */
-    private boolean isInside(int linha, int coluna) {
+    private boolean estaDentroDoTabuleiro(int linha, int coluna) {
         return linha >= 0 && linha < this.linhas && coluna >= 0 && coluna < this.colunas;
     }
 
@@ -71,7 +71,7 @@ public class Tabuleiro {
     /**
      * Distribui minas aleatoriamente, evitando uma coordenada especifica.
      *
-     * @param linhaExcluida linha que nao pode receber mina
+     * @param linhaExcluida  linha que nao pode receber mina
      * @param colunaExcluida coluna que nao pode receber mina
      */
     public void gerarMinasExceto(int linhaExcluida, int colunaExcluida) {
@@ -112,13 +112,14 @@ public class Tabuleiro {
                         if (di == 0 && dj == 0)
                             continue;
                         int ni = i + di, nj = j + dj;
-                        if (isInside(ni, nj) && this.tabuleiro[ni][nj].getTemMina()) {
+                        if (estaDentroDoTabuleiro(ni, nj) && this.tabuleiro[ni][nj].getTemMina()) {
                             count++;
                         }
                     }
                 }
                 // replace with updated vizinhas
-                this.tabuleiro[i][j] = new Celula(current.getTemMina(), current.getEstaRevelada(), current.getFlagged(),
+                this.tabuleiro[i][j] = new Celula(current.getTemMina(), current.getEstaRevelada(),
+                        current.isTemBandeira(),
                         count);
             }
         }
@@ -127,7 +128,7 @@ public class Tabuleiro {
     /**
      * Revela a celula e, se necessario, expande recursivamente casas vazias.
      *
-     * @param linha linha da celula
+     * @param linha  linha da celula
      * @param coluna coluna da celula
      */
     public void revelarCasa(Integer linha, Integer coluna) {
@@ -137,12 +138,12 @@ public class Tabuleiro {
         if (this.tabuleiro == null)
             return;
 
-        if (!isInside(linha, coluna))
+        if (!estaDentroDoTabuleiro(linha, coluna))
             return;
 
         Celula cell = tabuleiro[linha][coluna];
 
-        if (cell.getEstaRevelada() || cell.getFlagged())
+        if (cell.getEstaRevelada() || cell.isTemBandeira())
             return;
 
         // revela a célula
@@ -216,7 +217,7 @@ public class Tabuleiro {
             for (int j = 0; j < this.colunas; j++) {
                 Celula m = this.tabuleiro[i][j];
                 if (!m.getEstaRevelada()) {
-                    if (m.getFlagged())
+                    if (m.isTemBandeira())
                         System.out.print("F ");
                     else
                         System.out.print("# ");
@@ -234,14 +235,14 @@ public class Tabuleiro {
     /**
      * Alterna a bandeira em uma celula nao revelada.
      *
-     * @param linha linha da celula
+     * @param linha  linha da celula
      * @param coluna coluna da celula
      */
-    public void toggleFlag(int linha, int coluna) {
+    public void alternarBandeira(int linha, int coluna) {
         Celula cell = tabuleiro[linha][coluna];
 
         if (!cell.getEstaRevelada()) {
-            cell.setFlagged(!cell.getFlagged());
+            cell.setTemBandeira(!cell.isTemBandeira());
         }
     }
 
@@ -264,14 +265,100 @@ public class Tabuleiro {
     }
 
     /**
+     * Retorna o número de linhas do tabuleiro.
+     *
+     * @return quantidade de linhas
+     */
+    public Integer getLinhas() {
+        return this.linhas;
+    }
+
+    /**
+     * Retorna o número de colunas do tabuleiro.
+     *
+     * @return quantidade de colunas
+     */
+    public Integer getColunas() {
+        return this.colunas;
+    }
+
+    /**
+     * Restaura o estado completo do tabuleiro a partir de mapas serializados.
+     *
+     * @param minasMapa     mapa de minas
+     * @param reveladasMapa mapa de células reveladas
+     * @param bandeirasMapa mapa de bandeiras
+     * @param vizinhasMapa  mapa de vizinhas
+     */
+    public void restaurarEstado(boolean[][] minasMapa, boolean[][] reveladasMapa,
+            boolean[][] bandeirasMapa, int[][] vizinhasMapa) {
+        if (minasMapa == null || reveladasMapa == null || bandeirasMapa == null || vizinhasMapa == null) {
+            return;
+        }
+        if (minasMapa.length == 0 || minasMapa[0].length == 0) {
+            return;
+        }
+
+        this.linhas = minasMapa.length;
+        this.colunas = minasMapa[0].length;
+        iniciarTabuleiro();
+
+        for (int i = 0; i < this.linhas; i++) {
+            for (int j = 0; j < this.colunas; j++) {
+                this.tabuleiro[i][j] = new Celula(
+                        minasMapa[i][j],
+                        reveladasMapa[i][j],
+                        bandeirasMapa[i][j],
+                        vizinhasMapa[i][j]);
+            }
+        }
+    }
+
+    /**
      * Recria o tabuleiro e redistribui minas evitando uma coordenada.
      *
-     * @param linhaExcluida linha a ser excluida da geracao de minas
+     * @param linhaExcluida  linha a ser excluida da geracao de minas
      * @param colunaExcluida coluna a ser excluida da geracao de minas
      */
     public void resetarTabuleiro(int linhaExcluida, int colunaExcluida) {
         iniciarTabuleiro();
         gerarMinasExceto(linhaExcluida, colunaExcluida);
+        calcularVizinhas();
+    }
+
+    /**
+     * Configura um tabuleiro guiado com posições de mina pré-definidas.
+     *
+     * @param mapaMinas matriz booleana indicando onde existem minas
+     */
+    public void configurarTabuleiroTutorial(boolean[][] mapaMinas) {
+        if (mapaMinas == null || mapaMinas.length == 0 || mapaMinas[0].length == 0) {
+            return;
+        }
+
+        this.linhas = mapaMinas.length;
+        this.colunas = mapaMinas[0].length;
+
+        int totalMinas = 0;
+        for (int i = 0; i < this.linhas; i++) {
+            for (int j = 0; j < this.colunas; j++) {
+                if (mapaMinas[i][j]) {
+                    totalMinas++;
+                }
+            }
+        }
+
+        this.minas = totalMinas;
+        iniciarTabuleiro();
+
+        for (int i = 0; i < this.linhas; i++) {
+            for (int j = 0; j < this.colunas; j++) {
+                if (mapaMinas[i][j]) {
+                    this.tabuleiro[i][j] = new Celula(true, false, false, 0);
+                }
+            }
+        }
+
         calcularVizinhas();
     }
 

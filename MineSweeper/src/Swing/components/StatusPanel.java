@@ -14,6 +14,7 @@ public final class StatusPanel extends JPanel {
 
     private final JLabel labelTempo;
     private final JLabel labelMinas;
+    private final JLabel labelDicaTutorial;
     private final Tabuleiro tabuleiro;
 
     /**
@@ -27,9 +28,11 @@ public final class StatusPanel extends JPanel {
 
         labelTempo = new JLabel("Tempo: 00:00");
         labelMinas = new JLabel("Minas: 0");
+        labelDicaTutorial = new JLabel("");
 
         add(labelTempo);
         add(labelMinas);
+        add(labelDicaTutorial);
 
         aplicarTema(TemaManager.getTemaAtual());
     }
@@ -50,6 +53,22 @@ public final class StatusPanel extends JPanel {
      */
     public JLabel getMinasLabel() {
         return labelMinas;
+    }
+
+    /**
+     * Atualiza a dica exibida durante o tutorial.
+     *
+     * @param dica texto da dica contextual
+     */
+    public void atualizarDicaTutorial(String dica) {
+        labelDicaTutorial.setText(dica == null ? "" : "Dica: " + dica);
+    }
+
+    /**
+     * Limpa a dica de tutorial exibida no painel.
+     */
+    public void limparDicaTutorial() {
+        labelDicaTutorial.setText("");
     }
 
     /**
@@ -75,5 +94,6 @@ public final class StatusPanel extends JPanel {
         setBackground(tema.getPainelFundo());
         labelTempo.setForeground(tema.getTextoPadrao());
         labelMinas.setForeground(tema.getTextoPadrao());
+        labelDicaTutorial.setForeground(tema.getTextoPadrao());
     }
 }

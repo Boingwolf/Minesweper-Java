@@ -11,6 +11,7 @@ public class GameTimer {
     private Timer temporizador;
     private int segundosDecorridos;
     private final JLabel labelTempo;
+    private boolean rodando;
 
     /**
      * Cria o timer vinculado a um label de tempo.
@@ -20,19 +21,31 @@ public class GameTimer {
     public GameTimer(JLabel labelTempo) {
         this.labelTempo = labelTempo;
         this.segundosDecorridos = 0;
+        this.rodando = false;
     }
 
     /**
      * Inicia o timer e zera o contador.
      */
     public void iniciar() {
-        segundosDecorridos = 0;
+        iniciarComSegundos(0);
+    }
+
+    /**
+     * Inicia o timer a partir de um valor pré-existente.
+     *
+     * @param segundosIniciais segundos já decorridos
+     */
+    public void iniciarComSegundos(int segundosIniciais) {
+        parar();
+        segundosDecorridos = Math.max(0, segundosIniciais);
         atualizarLabel();
         temporizador = new Timer(1000, e -> {
             segundosDecorridos++;
             atualizarLabel();
         });
         temporizador.start();
+        rodando = true;
     }
 
     /**
@@ -41,6 +54,27 @@ public class GameTimer {
     public void parar() {
         if (temporizador != null) {
             temporizador.stop();
+        }
+        rodando = false;
+    }
+
+    /**
+     * Pausa o timer sem perder o valor acumulado.
+     */
+    public void pausar() {
+        if (temporizador != null && rodando) {
+            temporizador.stop();
+            rodando = false;
+        }
+    }
+
+    /**
+     * Retoma o timer a partir do valor atual.
+     */
+    public void retomar() {
+        if (temporizador != null && !rodando) {
+            temporizador.start();
+            rodando = true;
         }
     }
 
@@ -58,7 +92,16 @@ public class GameTimer {
      *
      * @return segundos decorridos
      */
-    public int getElapsedSeconds() {
+    public int getSegundosDecorridos() {
         return segundosDecorridos;
+    }
+
+    /**
+     * Retorna se o cronômetro está rodando.
+     *
+     * @return true quando ativo
+     */
+    public boolean isRodando() {
+        return rodando;
     }
 }
