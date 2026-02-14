@@ -7,6 +7,7 @@ import Swing.icons.IconManager;
 import Swing.menu.MenuInicial;
 import Swing.stats.DificuldadeJogo;
 import Swing.stats.EstatisticasService;
+import Swing.stats.LeaderboardService;
 import Swing.utils.GameSaveData;
 import Swing.utils.GameSaveManager;
 import Swing.utils.GameTimer;
@@ -15,12 +16,17 @@ import Swing.utils.TemaManager;
 import Swing.utils.ThemedDialog;
 import Swing.utils.TutorialInterativo;
 import java.awt.BorderLayout;
+import java.awt.GridLayout;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 /**
  * Controla a janela principal e o fluxo de telas do jogo.
@@ -33,6 +39,7 @@ public class GUIConfig {
     private GameTimer cronometroJogo;
     private final Tabuleiro tabuleiro;
     private final EstatisticasService estatisticasService;
+    private final LeaderboardService leaderboardService;
     private final GameSaveManager gameSaveManager;
     private final int linhasGame;
     private final int colunasGame;
@@ -64,6 +71,7 @@ public class GUIConfig {
     public GUIConfig(Tabuleiro tabuleiro, int linhas, int colunas, boolean modoTutorial) {
         this.tabuleiro = tabuleiro;
         this.estatisticasService = new EstatisticasService();
+        this.leaderboardService = new LeaderboardService();
         this.gameSaveManager = new GameSaveManager();
         this.linhasGame = linhas;
         this.colunasGame = colunas;
@@ -229,6 +237,8 @@ public class GUIConfig {
         itemPausar.addActionListener(e -> alternarPausa(itemPausar));
         JMenuItem itemEstatisticas = new JMenuItem("Estatísticas");
         itemEstatisticas.addActionListener(e -> mostrarEstatisticas());
+        JMenuItem itemLeaderboard = new JMenuItem("Leaderboard");
+        itemLeaderboard.addActionListener(e -> mostrarLeaderboard());
         JMenuItem itemMenuInicial = new JMenuItem("Menu Inicial");
         itemMenuInicial.addActionListener(e -> {
             cronometroJogo.parar();
@@ -240,12 +250,14 @@ public class GUIConfig {
         JMenuItem itemTemaClaro = new JMenuItem("Claro");
         itemTemaClaro.addActionListener(e -> {
             TemaManager.setTemaAtual(Tema.CLARO);
-            aplicarTema(barraMenu, menu, itemReiniciar, itemPausar, itemEstatisticas, itemMenuInicial, menuTema);
+            aplicarTema(barraMenu, menu, itemReiniciar, itemPausar, itemEstatisticas, itemLeaderboard,
+                    itemMenuInicial, menuTema);
         });
         JMenuItem itemTemaEscuro = new JMenuItem("Escuro");
         itemTemaEscuro.addActionListener(e -> {
             TemaManager.setTemaAtual(Tema.ESCURO);
-            aplicarTema(barraMenu, menu, itemReiniciar, itemPausar, itemEstatisticas, itemMenuInicial, menuTema);
+            aplicarTema(barraMenu, menu, itemReiniciar, itemPausar, itemEstatisticas, itemLeaderboard,
+                    itemMenuInicial, menuTema);
         });
         menuTema.add(itemTemaClaro);
         menuTema.add(itemTemaEscuro);
@@ -253,6 +265,7 @@ public class GUIConfig {
         menu.add(itemReiniciar);
         menu.add(itemPausar);
         menu.add(itemEstatisticas);
+        menu.add(itemLeaderboard);
         menu.add(itemMenuInicial);
         menu.addSeparator();
         menu.add(menuTema);
@@ -274,7 +287,8 @@ public class GUIConfig {
             }
         });
 
-        aplicarTema(barraMenu, menu, itemReiniciar, itemPausar, itemEstatisticas, itemMenuInicial, menuTema);
+        aplicarTema(barraMenu, menu, itemReiniciar, itemPausar, itemEstatisticas, itemLeaderboard, itemMenuInicial,
+                menuTema);
 
         janela.setVisible(true);
 
@@ -294,7 +308,7 @@ public class GUIConfig {
      * @param menuTema        menu de seleção de tema
      */
     private void aplicarTema(JMenuBar barraMenu, JMenu menu, JMenuItem itemReiniciar, JMenuItem itemPausar,
-            JMenuItem itemEstatisticas, JMenuItem itemMenuInicial, JMenu menuTema) {
+            JMenuItem itemEstatisticas, JMenuItem itemLeaderboard, JMenuItem itemMenuInicial, JMenu menuTema) {
         Tema tema = TemaManager.getTemaAtual();
         janela.getContentPane().setBackground(tema.getPainelFundo());
 
@@ -323,6 +337,10 @@ public class GUIConfig {
         itemEstatisticas.setOpaque(true);
         itemEstatisticas.setBackground(tema.getMenuFundo());
         itemEstatisticas.setForeground(tema.getMenuTexto());
+
+        itemLeaderboard.setOpaque(true);
+        itemLeaderboard.setBackground(tema.getMenuFundo());
+        itemLeaderboard.setForeground(tema.getMenuTexto());
 
         itemMenuInicial.setOpaque(true);
         itemMenuInicial.setBackground(tema.getMenuFundo());
@@ -361,6 +379,11 @@ public class GUIConfig {
     private void registrarResultadoPartida(boolean venceu) {
         int segundos = cronometroJogo != null ? cronometroJogo.getSegundosDecorridos() : 0;
         estatisticasService.registrarResultado(dificuldadeAtual, venceu, segundos);
+
+        if (venceu && !modoTutorial) {
+            String nomeJogador = solicitarNomeJogador();
+            leaderboardService.adicionarResultado(dificuldadeAtual, nomeJogador, segundos);
+        }
     }
 
     /**
@@ -368,6 +391,52 @@ public class GUIConfig {
      */
     private void mostrarEstatisticas() {
         ThemedDialog.mostrar(janela, "Estatísticas do Jogador", estatisticasService.gerarResumo(), "Fechar", 400);
+    }
+
+    /**
+     * Exibe o leaderboard consolidado por dificuldade.
+     */
+    private void mostrarLeaderboard() {
+        ThemedDialog.mostrar(janela, "Leaderboard", leaderboardService.gerarResumoRanking(), "Fechar", 500);
+    }
+
+    /**
+     * Solicita o nome do jogador para registrar no leaderboard.
+     *
+     * @return nome informado, ou nome padrão em caso de vazio
+     */
+    private String solicitarNomeJogador() {
+        Tema tema = TemaManager.getTemaAtual();
+        JPanel painel = new JPanel(new GridLayout(2, 1, 0, 8));
+        painel.setBackground(tema.getPainelFundo());
+
+        JLabel label = new JLabel("Vitória! Informe seu nome para o leaderboard:");
+        label.setForeground(tema.getTextoPadrao());
+
+        JTextField campoNome = new JTextField(System.getProperty("user.name", "Jogador"), 20);
+        campoNome.setBackground(tema.getBotaoFundo());
+        campoNome.setForeground(tema.getBotaoTexto());
+
+        painel.add(label);
+        painel.add(campoNome);
+
+        int resposta = JOptionPane.showConfirmDialog(
+                janela,
+                painel,
+                "Leaderboard",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE);
+
+        if (resposta != JOptionPane.OK_OPTION) {
+            return "Jogador";
+        }
+
+        String nome = campoNome.getText();
+        if (nome == null || nome.isBlank()) {
+            return "Jogador";
+        }
+
+        return nome.trim();
     }
 
     /**

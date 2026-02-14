@@ -2,6 +2,7 @@ package Swing.menu;
 
 import Swing.icons.IconManager;
 import Swing.stats.EstatisticasService;
+import Swing.stats.LeaderboardService;
 import Swing.utils.Tema;
 import Swing.utils.TemaManager;
 import Swing.utils.ThemedDialog;
@@ -28,6 +29,7 @@ public class MenuInicial {
     private final boolean possuiJogoSalvo;
     private final MenuCallback callback;
     private final EstatisticasService estatisticasService;
+    private final LeaderboardService leaderboardService;
 
     /**
      * Callback para selecao de dificuldade.
@@ -63,6 +65,7 @@ public class MenuInicial {
         this.possuiJogoSalvo = possuiJogoSalvo;
         this.callback = callback;
         this.estatisticasService = new EstatisticasService();
+        this.leaderboardService = new LeaderboardService();
     }
 
     /**
@@ -182,12 +185,17 @@ public class MenuInicial {
         JButton botaoEstatisticas = criarBotaoMenu("Estatísticas");
         botaoEstatisticas.addActionListener(e -> ThemedDialog.mostrar(janela, "Estatísticas do Jogador",
                 estatisticasService.gerarResumo(), "Fechar", 400));
+        JButton botaoLeaderboard = criarBotaoMenu("Leaderboard");
+        botaoLeaderboard.addActionListener(e -> ThemedDialog.mostrar(janela, "Leaderboard",
+                leaderboardService.gerarResumoRanking(), "Fechar", 500));
         painelPrincipal.add(botaoEstatisticas);
+        painelPrincipal.add(Box.createRigidArea(new Dimension(0, 15)));
+        painelPrincipal.add(botaoLeaderboard);
         painelPrincipal.add(Box.createRigidArea(new Dimension(0, 15)));
         painelPrincipal.add(botaoSair);
 
         JButton[] botoesMenu = new JButton[] { botaoContinuar, botaoFacil, botaoMedio, botaoDificil, botaoTutorial,
-                botaoEstatisticas, botaoSair };
+                botaoEstatisticas, botaoLeaderboard, botaoSair };
         JRadioButton[] radiosMenu = new JRadioButton[] { botaoSim, botaoNao, botaoClaro, botaoEscuro };
 
         botaoClaro.addActionListener(e -> {

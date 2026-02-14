@@ -10,14 +10,18 @@ public class Celula {
     private Boolean temBandeira;
     private Integer vizinhas;
 
+    private void aplicarEstado(CelulaEstado estado) {
+        this.temMina = estado.getTemMina();
+        this.estaRevelada = estado.getEstaRevelada();
+        this.temBandeira = estado.getTemBandeira();
+        this.vizinhas = estado.getVizinhas();
+    }
+
     /**
      * Cria uma celula vazia, nao revelada, sem bandeira e com zero vizinhas.
      */
     public Celula() {
-        this.temMina = false;
-        this.estaRevelada = false;
-        this.temBandeira = false;
-        this.vizinhas = 0;
+        aplicarEstado(CelulaEstadoFactory.criarPadrao());
     }
 
     /**
@@ -29,10 +33,7 @@ public class Celula {
      * @param vizinhas     numero de minas vizinhas
      */
     public Celula(Boolean temMina, Boolean estaRevelada, Boolean temBandeira, Integer vizinhas) {
-        this.temMina = temMina;
-        this.estaRevelada = estaRevelada;
-        this.temBandeira = temBandeira;
-        this.vizinhas = vizinhas;
+        aplicarEstado(CelulaEstadoFactory.criarNormalizado(temMina, estaRevelada, temBandeira, vizinhas));
     }
 
     /**
@@ -77,7 +78,7 @@ public class Celula {
      * @param estaRevelada novo estado de revelacao
      */
     public void setEstaRevelada(Boolean estaRevelada) {
-        this.estaRevelada = estaRevelada;
+        this.estaRevelada = CelulaEstadoFactory.normalizarBoolean(estaRevelada);
     }
 
     /**
@@ -86,6 +87,6 @@ public class Celula {
      * @param temBandeira novo estado de bandeira
      */
     public void setTemBandeira(Boolean temBandeira) {
-        this.temBandeira = temBandeira;
+        this.temBandeira = CelulaEstadoFactory.normalizarBoolean(temBandeira);
     }
 }
