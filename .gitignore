@@ -145,3 +145,13 @@ $RECYCLE.BIN/
 ################################
 MineSweeper/data/minesweeper-save.dat
 MineSweeper/data/minesweeper-estatisticas.properties
+MineSweeper/data/minesweeper-leaderboard.properties
+
+
+################################
+# jpackage / Release Artifacts
+################################
+MineSweeper/dist-debug/
+MineSweeper/dist/
+MineSweeper/build/
+**/runtime/lib/modules
