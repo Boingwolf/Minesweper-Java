@@ -13,6 +13,7 @@ public class GameSaveData implements Serializable {
     private final int colunas;
     private final int minas;
     private final int segundosDecorridos;
+    private final int ajudasRestantes;
     private final boolean primeiroCliquePendente;
     private final boolean primeiroCliqueSeguroAtivado;
 
@@ -25,12 +26,14 @@ public class GameSaveData implements Serializable {
      * Cria um snapshot completo do jogo salvo.
      */
     public GameSaveData(int linhas, int colunas, int minas, int segundosDecorridos,
+            int ajudasRestantes,
             boolean primeiroCliquePendente, boolean primeiroCliqueSeguroAtivado,
             boolean[][] minasMapa, boolean[][] reveladasMapa, boolean[][] bandeirasMapa, int[][] vizinhasMapa) {
         this.linhas = linhas;
         this.colunas = colunas;
         this.minas = minas;
         this.segundosDecorridos = segundosDecorridos;
+        this.ajudasRestantes = Math.max(0, ajudasRestantes);
         this.primeiroCliquePendente = primeiroCliquePendente;
         this.primeiroCliqueSeguroAtivado = primeiroCliqueSeguroAtivado;
         this.minasMapa = minasMapa;
@@ -53,6 +56,10 @@ public class GameSaveData implements Serializable {
 
     public int getSegundosDecorridos() {
         return segundosDecorridos;
+    }
+
+    public int getAjudasRestantes() {
+        return ajudasRestantes;
     }
 
     public boolean isPrimeiroCliquePendente() {

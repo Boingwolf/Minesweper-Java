@@ -79,6 +79,18 @@ public class Tabuleiro {
     }
 
     /**
+     * Aplica chording em uma celula revelada numerada quando o total de
+     * bandeiras vizinhas e igual ao numero da celula.
+     *
+     * @param linha  linha da celula
+     * @param coluna coluna da celula
+     * @return true quando alguma celula vizinha foi revelada; caso contrario false
+     */
+    public boolean chordarCasa(Integer linha, Integer coluna) {
+        return TabuleiroChordador.chordarCasa(this.tabuleiro, this.linhas, this.colunas, linha, coluna);
+    }
+
+    /**
      * Verifica se todas as celulas sem mina foram reveladas.
      *
      * @return true se o jogador venceu; caso contrario false

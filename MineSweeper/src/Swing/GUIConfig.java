@@ -16,22 +16,20 @@ import Swing.utils.TemaManager;
 import Swing.utils.ThemedDialog;
 import Swing.utils.TutorialInterativo;
 import java.awt.BorderLayout;
-import java.awt.GridLayout;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
 
 /**
  * Controla a janela principal e o fluxo de telas do jogo.
  */
 public class GUIConfig {
+
+    private static final int LIMITE_AJUDAS_POR_JOGO = 3;
+    private static final int PENALIDADE_SEGUNDOS_AJUDA = 15;
 
     private JFrame janela;
     private GamePanel painelJogo;
@@ -47,6 +45,7 @@ public class GUIConfig {
     private final boolean modoTutorial;
     private DificuldadeJogo dificuldadeAtual;
     private int segundosIniciais;
+    private int ajudasRestantes;
     private boolean primeiroCliquePendente;
 
     /**
@@ -79,6 +78,7 @@ public class GUIConfig {
         this.modoTutorial = modoTutorial;
         this.dificuldadeAtual = DificuldadeJogo.deConfiguracao(linhas, colunas, minasGame);
         this.segundosIniciais = 0;
+        this.ajudasRestantes = LIMITE_AJUDAS_POR_JOGO;
         this.primeiroCliquePendente = !modoTutorial;
     }
 
@@ -172,6 +172,7 @@ public class GUIConfig {
         guiCarregada.dificuldadeAtual = DificuldadeJogo.deConfiguracao(
                 saveData.getLinhas(), saveData.getColunas(), saveData.getMinas());
         guiCarregada.segundosIniciais = saveData.getSegundosDecorridos();
+        guiCarregada.ajudasRestantes = saveData.getAjudasRestantes();
         guiCarregada.primeiroCliquePendente = saveData.isPrimeiroCliquePendente();
         guiCarregada.iniciarJanela();
     }
@@ -228,6 +229,7 @@ public class GUIConfig {
         cronometroJogo.iniciarComSegundos(segundosIniciais);
 
         painelEstado.atualizarMinasRestantes(painelJogo.getQuantidadeBandeiras());
+        painelEstado.atualizarAjudas(ajudasRestantes, LIMITE_AJUDAS_POR_JOGO);
 
         final JMenuBar barraMenu = new JMenuBar();
         JMenu menu = new JMenu("Opções");
@@ -239,6 +241,13 @@ public class GUIConfig {
         itemEstatisticas.addActionListener(e -> mostrarEstatisticas());
         JMenuItem itemLeaderboard = new JMenuItem("Leaderboard");
         itemLeaderboard.addActionListener(e -> mostrarLeaderboard());
+        JMenu menuAjudas = new JMenu("Ajudas");
+        JMenuItem itemRevelarSegura = new JMenuItem("Revelar célula segura");
+        itemRevelarSegura.addActionListener(e -> usarAjudaRevelarSegura());
+        JMenuItem itemMarcarMina = new JMenuItem("Marcar mina automática");
+        itemMarcarMina.addActionListener(e -> usarAjudaMarcarMina());
+        menuAjudas.add(itemRevelarSegura);
+        menuAjudas.add(itemMarcarMina);
         JMenuItem itemMenuInicial = new JMenuItem("Menu Inicial");
         itemMenuInicial.addActionListener(e -> {
             cronometroJogo.parar();
@@ -251,13 +260,13 @@ public class GUIConfig {
         itemTemaClaro.addActionListener(e -> {
             TemaManager.setTemaAtual(Tema.CLARO);
             aplicarTema(barraMenu, menu, itemReiniciar, itemPausar, itemEstatisticas, itemLeaderboard,
-                    itemMenuInicial, menuTema);
+                    menuAjudas, itemRevelarSegura, itemMarcarMina, itemMenuInicial, menuTema);
         });
         JMenuItem itemTemaEscuro = new JMenuItem("Escuro");
         itemTemaEscuro.addActionListener(e -> {
             TemaManager.setTemaAtual(Tema.ESCURO);
             aplicarTema(barraMenu, menu, itemReiniciar, itemPausar, itemEstatisticas, itemLeaderboard,
-                    itemMenuInicial, menuTema);
+                    menuAjudas, itemRevelarSegura, itemMarcarMina, itemMenuInicial, menuTema);
         });
         menuTema.add(itemTemaClaro);
         menuTema.add(itemTemaEscuro);
@@ -266,6 +275,7 @@ public class GUIConfig {
         menu.add(itemPausar);
         menu.add(itemEstatisticas);
         menu.add(itemLeaderboard);
+        menu.add(menuAjudas);
         menu.add(itemMenuInicial);
         menu.addSeparator();
         menu.add(menuTema);
@@ -287,8 +297,8 @@ public class GUIConfig {
             }
         });
 
-        aplicarTema(barraMenu, menu, itemReiniciar, itemPausar, itemEstatisticas, itemLeaderboard, itemMenuInicial,
-                menuTema);
+        aplicarTema(barraMenu, menu, itemReiniciar, itemPausar, itemEstatisticas, itemLeaderboard, menuAjudas,
+                itemRevelarSegura, itemMarcarMina, itemMenuInicial, menuTema);
 
         janela.setVisible(true);
 
@@ -308,7 +318,9 @@ public class GUIConfig {
      * @param menuTema        menu de seleção de tema
      */
     private void aplicarTema(JMenuBar barraMenu, JMenu menu, JMenuItem itemReiniciar, JMenuItem itemPausar,
-            JMenuItem itemEstatisticas, JMenuItem itemLeaderboard, JMenuItem itemMenuInicial, JMenu menuTema) {
+            JMenuItem itemEstatisticas, JMenuItem itemLeaderboard, JMenu menuAjudas,
+            JMenuItem itemRevelarSegura, JMenuItem itemMarcarMina,
+            JMenuItem itemMenuInicial, JMenu menuTema) {
         Tema tema = TemaManager.getTemaAtual();
         janela.getContentPane().setBackground(tema.getPainelFundo());
 
@@ -341,6 +353,18 @@ public class GUIConfig {
         itemLeaderboard.setOpaque(true);
         itemLeaderboard.setBackground(tema.getMenuFundo());
         itemLeaderboard.setForeground(tema.getMenuTexto());
+
+        menuAjudas.setOpaque(true);
+        menuAjudas.setBackground(tema.getMenuFundo());
+        menuAjudas.setForeground(tema.getMenuTexto());
+
+        itemRevelarSegura.setOpaque(true);
+        itemRevelarSegura.setBackground(tema.getMenuFundo());
+        itemRevelarSegura.setForeground(tema.getMenuTexto());
+
+        itemMarcarMina.setOpaque(true);
+        itemMarcarMina.setBackground(tema.getMenuFundo());
+        itemMarcarMina.setForeground(tema.getMenuTexto());
 
         itemMenuInicial.setOpaque(true);
         itemMenuInicial.setBackground(tema.getMenuFundo());
@@ -406,33 +430,18 @@ public class GUIConfig {
      * @return nome informado, ou nome padrão em caso de vazio
      */
     private String solicitarNomeJogador() {
-        Tema tema = TemaManager.getTemaAtual();
-        JPanel painel = new JPanel(new GridLayout(2, 1, 0, 8));
-        painel.setBackground(tema.getPainelFundo());
-
-        JLabel label = new JLabel("Vitória! Informe seu nome para o leaderboard:");
-        label.setForeground(tema.getTextoPadrao());
-
-        JTextField campoNome = new JTextField(System.getProperty("user.name", "Jogador"), 20);
-        campoNome.setBackground(tema.getBotaoFundo());
-        campoNome.setForeground(tema.getBotaoTexto());
-
-        painel.add(label);
-        painel.add(campoNome);
-
-        int resposta = JOptionPane.showConfirmDialog(
+        String nomeInformado = ThemedDialog.solicitarTexto(
                 janela,
-                painel,
                 "Leaderboard",
-                JOptionPane.OK_CANCEL_OPTION,
-                JOptionPane.PLAIN_MESSAGE);
+                "Vitória! Informe o seu nome para o leaderboard:",
+                System.getProperty("user.name", "Jogador"));
 
-        if (resposta != JOptionPane.OK_OPTION) {
+        if (nomeInformado == null) {
             return "Jogador";
         }
 
-        String nome = campoNome.getText();
-        if (nome == null || nome.isBlank()) {
+        String nome = nomeInformado;
+        if (nome.isBlank()) {
             return "Jogador";
         }
 
@@ -459,6 +468,72 @@ public class GUIConfig {
             cronometroJogo.retomar();
             itemPausar.setText("Pausar");
         }
+    }
+
+    /**
+     * Usa a ajuda de revelar célula segura aleatória.
+     */
+    private void usarAjudaRevelarSegura() {
+        if (!podeUsarAjuda()) {
+            return;
+        }
+
+        boolean aplicada = painelJogo.revelarCelulaSeguraAleatoria();
+        if (!aplicada) {
+            ThemedDialog.mostrar(janela, "Ajudas", "Não há células seguras disponíveis para revelar.", "Fechar", 320);
+            return;
+        }
+
+        registrarUsoAjuda();
+    }
+
+    /**
+     * Usa a ajuda de marcação automática de mina.
+     */
+    private void usarAjudaMarcarMina() {
+        if (!podeUsarAjuda()) {
+            return;
+        }
+
+        boolean aplicada = painelJogo.marcarMinaAleatoria();
+        if (!aplicada) {
+            ThemedDialog.mostrar(janela, "Ajudas", "Não há minas disponíveis para marcação automática.", "Fechar", 320);
+            return;
+        }
+
+        registrarUsoAjuda();
+    }
+
+    /**
+     * Valida se o uso de ajuda está disponível no estado atual da partida.
+     *
+     * @return true quando uma ajuda pode ser usada
+     */
+    private boolean podeUsarAjuda() {
+        if (modoTutorial || painelJogo == null || cronometroJogo == null) {
+            return false;
+        }
+
+        if (painelJogo.isPausado()) {
+            ThemedDialog.mostrar(janela, "Ajudas", "Retome a partida para usar ajudas.", "Fechar", 260);
+            return false;
+        }
+
+        if (ajudasRestantes <= 0) {
+            ThemedDialog.mostrar(janela, "Ajudas", "Você já utilizou todas as ajudas desta partida.", "Fechar", 300);
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Aplica os efeitos de consumo de ajuda: decremento e penalidade de tempo.
+     */
+    private void registrarUsoAjuda() {
+        ajudasRestantes = Math.max(0, ajudasRestantes - 1);
+        cronometroJogo.adicionarPenalidadeSegundos(PENALIDADE_SEGUNDOS_AJUDA);
+        painelEstado.atualizarAjudas(ajudasRestantes, LIMITE_AJUDAS_POR_JOGO);
     }
 
     /**
@@ -491,6 +566,7 @@ public class GUIConfig {
                 colunas,
                 tabuleiro.getMinas(),
                 cronometroJogo.getSegundosDecorridos(),
+                ajudasRestantes,
                 painelJogo.isPrimeiroCliquePendente(),
                 GamePanel.isPrimeiroCliqueSeguroAtivado(),
                 minasMapa,

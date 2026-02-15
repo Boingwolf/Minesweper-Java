@@ -14,6 +14,7 @@ public final class StatusPanel extends JPanel {
 
     private final JLabel labelTempo;
     private final JLabel labelMinas;
+    private final JLabel labelAjudas;
     private final JLabel labelDicaTutorial;
     private final Tabuleiro tabuleiro;
 
@@ -28,10 +29,12 @@ public final class StatusPanel extends JPanel {
 
         labelTempo = new JLabel("Tempo: 00:00");
         labelMinas = new JLabel("Minas: 0");
+        labelAjudas = new JLabel("Ajudas: 0/0");
         labelDicaTutorial = new JLabel("");
 
         add(labelTempo);
         add(labelMinas);
+        add(labelAjudas);
         add(labelDicaTutorial);
 
         aplicarTema(TemaManager.getTemaAtual());
@@ -85,6 +88,18 @@ public final class StatusPanel extends JPanel {
     }
 
     /**
+     * Atualiza o total de ajudas disponíveis e o limite da partida.
+     *
+     * @param ajudasRestantes total ainda disponível
+     * @param limiteAjudas    limite total da partida
+     */
+    public void atualizarAjudas(int ajudasRestantes, int limiteAjudas) {
+        int restantesValidos = Math.max(0, ajudasRestantes);
+        int limiteValido = Math.max(0, limiteAjudas);
+        labelAjudas.setText("Ajudas: " + restantesValidos + "/" + limiteValido);
+    }
+
+    /**
      * Aplica o tema ao painel de status.
      *
      * @param tema tema escolhido
@@ -94,6 +109,7 @@ public final class StatusPanel extends JPanel {
         setBackground(tema.getPainelFundo());
         labelTempo.setForeground(tema.getTextoPadrao());
         labelMinas.setForeground(tema.getTextoPadrao());
+        labelAjudas.setForeground(tema.getTextoPadrao());
         labelDicaTutorial.setForeground(tema.getTextoPadrao());
     }
 }

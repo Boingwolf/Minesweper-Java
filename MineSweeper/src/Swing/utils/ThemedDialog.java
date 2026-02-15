@@ -5,13 +5,16 @@ import java.awt.Component;
 import java.awt.Dialog;
 import java.awt.FlowLayout;
 import java.awt.Frame;
+import java.awt.GridLayout;
 import java.awt.Window;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
 /**
@@ -85,6 +88,85 @@ public final class ThemedDialog {
         dialog.setMinimumSize(dialog.getSize());
         dialog.setLocationRelativeTo(parent);
         dialog.setVisible(true);
+    }
+
+    /**
+     * Solicita um texto ao utilizador com diálogo temático.
+     *
+     * @param parent      componente pai
+     * @param titulo      título da janela
+     * @param mensagem    mensagem exibida acima do campo
+     * @param valorPadrao valor inicial do campo
+     * @return texto confirmado, ou null quando cancelado
+     */
+    public static String solicitarTexto(Component parent, String titulo, String mensagem, String valorPadrao) {
+        Tema tema = TemaManager.getTemaAtual();
+        JDialog dialog = criarDialog(parent, titulo);
+
+        final String[] resultado = new String[1];
+
+        JPanel painelRaiz = new JPanel(new BorderLayout(0, 12));
+        painelRaiz.setBackground(tema.getPainelFundo());
+        painelRaiz.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
+
+        JPanel painelConteudo = new JPanel(new GridLayout(2, 1, 0, 8));
+        painelConteudo.setBackground(tema.getPainelFundo());
+
+        JLabel labelMensagem = new JLabel(mensagem);
+        labelMensagem.setForeground(tema.getTextoPadrao());
+
+        JTextField campoTexto = new JTextField(valorPadrao == null ? "" : valorPadrao, 20);
+        campoTexto.setBackground(tema.getBotaoFundo());
+        campoTexto.setForeground(tema.getBotaoTexto());
+        campoTexto.setCaretColor(tema.getBotaoTexto());
+        campoTexto.setBorder(BorderFactory.createLineBorder(tema.getMenuFundo()));
+
+        painelConteudo.add(labelMensagem);
+        painelConteudo.add(campoTexto);
+
+        JButton botaoCancelar = new JButton("Cancelar");
+        botaoCancelar.setFocusPainted(false);
+        botaoCancelar.setOpaque(true);
+        botaoCancelar.setBackground(tema.getBotaoFundo());
+        botaoCancelar.setForeground(tema.getBotaoTexto());
+        botaoCancelar.addActionListener(e -> {
+            resultado[0] = null;
+            dialog.dispose();
+        });
+
+        JButton botaoConfirmar = new JButton("Confirmar");
+        botaoConfirmar.setFocusPainted(false);
+        botaoConfirmar.setOpaque(true);
+        botaoConfirmar.setBackground(tema.getBotaoFundo());
+        botaoConfirmar.setForeground(tema.getBotaoTexto());
+        botaoConfirmar.addActionListener(e -> {
+            resultado[0] = campoTexto.getText();
+            dialog.dispose();
+        });
+
+        campoTexto.addActionListener(e -> {
+            resultado[0] = campoTexto.getText();
+            dialog.dispose();
+        });
+
+        JPanel painelAcoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        painelAcoes.setBackground(tema.getPainelFundo());
+        painelAcoes.add(botaoCancelar);
+        painelAcoes.add(botaoConfirmar);
+
+        painelRaiz.add(painelConteudo, BorderLayout.CENTER);
+        painelRaiz.add(painelAcoes, BorderLayout.SOUTH);
+
+        dialog.setContentPane(painelRaiz);
+        dialog.setSize(460, 180);
+        dialog.setMinimumSize(dialog.getSize());
+        dialog.setLocationRelativeTo(parent);
+        dialog.getRootPane().setDefaultButton(botaoConfirmar);
+
+        SwingUtilities.invokeLater(campoTexto::requestFocusInWindow);
+        dialog.setVisible(true);
+
+        return resultado[0];
     }
 
     private static JDialog criarDialog(Component parent, String titulo) {

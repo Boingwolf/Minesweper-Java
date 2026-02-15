@@ -17,6 +17,9 @@ import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -37,6 +40,7 @@ public final class GamePanel extends JPanel {
     private final StatusPanel painelEstado;
     private final GameCallback callbackJogo;
     private final TutorialInterativo tutorialInterativo;
+    private final Random geradorAleatorio;
     private boolean primeiroClique;
     private boolean pausado;
     private static boolean primeiroCliqueSeguroAtivado = true;
@@ -108,6 +112,7 @@ public final class GamePanel extends JPanel {
         this.primeiroClique = tutorialInterativo == null && primeiroCliquePendente;
         this.pausado = false;
         this.gestorIcones = new IconManager();
+        this.geradorAleatorio = new Random();
 
         criarGrid();
         aplicarTema(TemaManager.getTemaAtual());
@@ -189,6 +194,30 @@ public final class GamePanel extends JPanel {
             primeiroClique = false;
         }
 
+        boolean chordExecutado = tabuleiro.chordarCasa(linha, coluna);
+        if (chordExecutado) {
+            atualizarTela();
+
+            if (tutorialInterativo != null) {
+                tutorialInterativo.concluirPasso(painelEstado);
+                if (!tutorialInterativo.isAtivo()) {
+                    ThemedDialog.mostrar(this, "Tutorial Interativo",
+                            "Tutorial concluído! Agora você já pode jogar normalmente.", "Continuar", 260);
+                    callbackJogo.onGameWon();
+                }
+                return;
+            }
+
+            if (tabuleiro.verificarDerrota()) {
+                ThemedDialog.mostrar(this, "Fim de Jogo", "Você perdeu!", "Continuar", 240);
+                callbackJogo.onGameLost();
+            } else if (tabuleiro.verificarVitoria()) {
+                ThemedDialog.mostrar(this, "Fim de Jogo", "Parabéns, você venceu!", "Continuar", 240);
+                callbackJogo.onGameWon();
+            }
+            return;
+        }
+
         tabuleiro.revelarCasa(linha, coluna);
         atualizarTela();
 
@@ -202,7 +231,7 @@ public final class GamePanel extends JPanel {
             return;
         }
 
-        if (tabuleiro.getTabuleiro()[linha][coluna].getTemMina()) {
+        if (tabuleiro.verificarDerrota()) {
             ThemedDialog.mostrar(this, "Fim de Jogo", "Você perdeu!", "Continuar", 240);
             callbackJogo.onGameLost();
         } else if (tabuleiro.verificarVitoria()) {
@@ -249,6 +278,77 @@ public final class GamePanel extends JPanel {
     }
 
     /**
+     * Revela uma célula segura aleatória ainda não revelada.
+     *
+     * @return true quando uma célula foi revelada
+     */
+    public boolean revelarCelulaSeguraAleatoria() {
+        if (pausado || tutorialInterativo != null || tabuleiro.verificarVitoria() || tabuleiro.verificarDerrota()) {
+            return false;
+        }
+
+        List<int[]> candidatas = new ArrayList<>();
+        for (int i = 0; i < linhas; i++) {
+            for (int j = 0; j < colunas; j++) {
+                Celula celula = tabuleiro.getTabuleiro()[i][j];
+                if (!celula.getEstaRevelada() && !celula.isTemBandeira() && !celula.getTemMina()) {
+                    candidatas.add(new int[] { i, j });
+                }
+            }
+        }
+
+        if (candidatas.isEmpty()) {
+            return false;
+        }
+
+        int[] coordenada = candidatas.get(geradorAleatorio.nextInt(candidatas.size()));
+        if (primeiroClique) {
+            primeiroClique = false;
+        }
+
+        tabuleiro.revelarCasa(coordenada[0], coordenada[1]);
+        atualizarTela();
+
+        if (tabuleiro.verificarVitoria()) {
+            ThemedDialog.mostrar(this, "Fim de Jogo", "Parabéns, você venceu!", "Continuar", 240);
+            callbackJogo.onGameWon();
+        }
+
+        return true;
+    }
+
+    /**
+     * Marca automaticamente uma mina aleatória ainda não sinalizada.
+     *
+     * @return true quando uma mina foi marcada
+     */
+    public boolean marcarMinaAleatoria() {
+        if (pausado || tutorialInterativo != null || tabuleiro.verificarVitoria() || tabuleiro.verificarDerrota()) {
+            return false;
+        }
+
+        List<int[]> candidatas = new ArrayList<>();
+        for (int i = 0; i < linhas; i++) {
+            for (int j = 0; j < colunas; j++) {
+                Celula celula = tabuleiro.getTabuleiro()[i][j];
+                if (!celula.getEstaRevelada() && !celula.isTemBandeira() && celula.getTemMina()) {
+                    candidatas.add(new int[] { i, j });
+                }
+            }
+        }
+
+        if (candidatas.isEmpty()) {
+            return false;
+        }
+
+        int[] coordenada = candidatas.get(geradorAleatorio.nextInt(candidatas.size()));
+        tabuleiro.alternarBandeira(coordenada[0], coordenada[1]);
+        botoes[coordenada[0]][coordenada[1]].setIcon(gestorIcones.getBandeiraIcon());
+        atualizarMinasRestantes();
+        return true;
+    }
+
+    /**
      * Atualiza os icones e estados visuais das celulas.
      */
     private void atualizarTela() {
@@ -278,11 +378,11 @@ public final class GamePanel extends JPanel {
                         botoes[i][j].setIcon(gestorIcones.getCelulaAbertaIcon());
                     }
 
-                    botoes[i][j].setDisabledIcon(botoes[i][j].getIcon());
                     botoes[i][j].setText("");
-                    botoes[i][j].setEnabled(false);
+                    botoes[i][j].setEnabled(true);
                 } else if (!celula.isTemBandeira()) {
                     botoes[i][j].setIcon(gestorIcones.getCelulaFechadaIcon());
+                    botoes[i][j].setEnabled(true);
                 }
             }
         }

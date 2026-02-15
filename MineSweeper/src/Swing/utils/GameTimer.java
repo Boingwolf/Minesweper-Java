@@ -97,6 +97,20 @@ public class GameTimer {
     }
 
     /**
+     * Adiciona penalidade em segundos ao tempo atual.
+     *
+     * @param segundos quantidade de segundos a adicionar
+     */
+    public void adicionarPenalidadeSegundos(int segundos) {
+        if (segundos <= 0) {
+            return;
+        }
+
+        segundosDecorridos += segundos;
+        atualizarLabel();
+    }
+
+    /**
      * Retorna se o cronômetro está rodando.
      *
      * @return true quando ativo
