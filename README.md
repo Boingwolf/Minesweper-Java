@@ -2,7 +2,7 @@
 
 ## Descrição
 
-Este projeto implementa o jogo clássico **Minesweeper** (Campo minado), permitindo ao utilizador revelar células, colocar bandeiras e concluir partidas de acordo com diferentes níveis de dificuldade.
+Este projeto implementa o jogo clássico **Minesweeper** (Campo Minado), permitindo ao utilizador revelar células, colocar bandeiras e concluir partidas em diferentes níveis de dificuldade.
 
 O objetivo pedagógico é consolidar competências técnicas em:
 
@@ -21,13 +21,23 @@ O objetivo pedagógico é consolidar competências técnicas em:
 - Gestão de tema (claro/escuro);
 - Estatísticas de jogador e níveis de dificuldade.
 
-## Tecnologias Utilizadas
+### Sistema de Ajudas/Dicas
+
+O jogo inclui um sistema de ajudas para apoiar o jogador em momentos críticos:
+
+- **Revelar célula segura aleatória** (nunca revela uma mina);
+- **Marcação automática de mina** em célula ainda não sinalizada;
+- **Limite por partida** de `3` ajudas no total;
+- **Penalização de tempo** de `+15 segundos` por ajuda utilizada;
+- **Indicador visual** no painel de estado: `Ajudas: restantes/total`.
+
+## Tecnologias utilizadas
 
 - **Java**
 - **Java Swing** (interface gráfica)
 - Estrutura modular por pacotes (lógica, interface e utilitários)
 
-## Estrutura do Projeto
+## Estrutura do projeto
 
 ```text
 MineSweeper/
@@ -52,15 +62,15 @@ MineSweeper/
 - Sistema operativo com suporte Java (Windows, Linux ou macOS);
 - IDE opcional: VS Code, IntelliJ IDEA ou Eclipse.
 
-## Como Executar
+## Como executar
 
 ### Opção 1 — VS Code
 
 1. Abrir a pasta do projeto `MineSweeper` no VS Code;
-2. Garantir que o Java está configurado no ambiente;
+2. Garantir que o Java está corretamente configurado no sistema;
 3. Executar a classe `Main.java`.
 
-### Opção 2 — Linha de Comandos
+### Opção 2 — Linha de comandos
 
 Na raiz do repositório:
 
@@ -70,7 +80,7 @@ javac -d bin src/Main.java src/Funcoes/CelulaPack/*.java src/Funcoes/OutrasFunco
 java -cp bin Main
 ```
 
-## Contexto Escolar
+## Contexto escolar
 
 Este trabalho foi concebido como projeto prático para demonstrar a capacidade de:
 
